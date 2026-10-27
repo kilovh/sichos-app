@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { tick } from 'svelte';
-	import { resolve } from '$app/paths';
-	import type { Sicha } from '#lib/catalog/types.ts';
+	import type { Farbrengen, Sicha } from '#lib/catalog/types.ts';
 	import { renderMarkdown } from '#lib/markdown.ts';
 	import type { Note } from '#lib/notes/note.ts';
 	import { store } from '#lib/store.svelte.ts';
@@ -28,9 +27,7 @@
 		if (!editing) draft = body;
 	});
 
-	const html = $derived(
-		renderMarkdown(note.body, store.byId, (id) => resolve('/s/[id]', { id }))
-	);
+	const html = $derived(renderMarkdown(note.body, (id) => store.label(id)));
 
 	function commit() {
 		clearTimeout(timer);
@@ -51,7 +48,7 @@
 		picking = { at };
 	}
 
-	async function insert(s: Sicha) {
+	async function insert(s: Sicha | Farbrengen) {
 		if (!picking) return;
 		const link = `[[${s.id}]]`;
 		const { from = picking.at, at } = picking;

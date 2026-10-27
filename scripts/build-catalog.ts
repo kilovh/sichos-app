@@ -55,8 +55,23 @@ for (let vol = 1; vol <= VOLUMES; vol++) {
 	all.push(...sichos);
 }
 
+// Full-text links, from scripts/build-chabadlibrary.ts (run that first; without it there are none).
+const CL_PAGES = '.cache/chabadlibrary-ls.json';
+const clPages: Record<string, number> = existsSync(CL_PAGES) ? JSON.parse(readFileSync(CL_PAGES, 'utf8')) : {};
+let linked = 0;
+for (const s of all) {
+	const node = s.page && clPages[`${s.vol}:${s.page}`];
+	if (node) {
+		s.links.chabadlibrary = `https://chabadlibrary.org/books/${node}`;
+		linked++;
+	}
+}
+const clVolumes = new Set(Object.keys(clPages).map((k) => Number(k.split(':')[0])));
+const unmatched = all.filter((s) => s.kind !== 'meta' && clVolumes.has(s.vol) && !s.links.chabadlibrary);
+
 writeFileSync(OUT, JSON.stringify(all, null, '\t') + '\n');
-const problems = validate(all);
+const problems = [...validate(all), ...unmatched.map((s) => `${s.id}: no Chabad Library page ${s.page}`)];
 writeFileSync('.cache/catalog-problems.txt', problems.join('\n') + '\n');
 console.log(`\n${all.length} entries → ${OUT}`);
+console.log(`${linked} linked to Chabad Library (volumes ${[...clVolumes].sort((a, b) => a - b).join(', ') || 'none'})`);
 console.log(`${problems.length} problems for review → .cache/catalog-problems.txt`);

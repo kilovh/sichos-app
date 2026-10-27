@@ -2,6 +2,7 @@
 	import { resolve } from '$app/paths';
 	import { SEFARIM } from '#lib/catalog/parshiyos.ts';
 	import { byOtherHeading, byParsha } from '#lib/catalog/views.ts';
+	import TmYears from '#lib/components/TmYears.svelte';
 	import VolumeGrid from '#lib/components/VolumeGrid.svelte';
 	import { store } from '#lib/store.svelte.ts';
 
@@ -39,6 +40,14 @@
 	</section>
 
 	<section>
+		<div class="head">
+			<h1 class="eyebrow">Toras Menachem · by year</h1>
+			<a class="ui muted" href={resolve('/tm')}>Favorites →</a>
+		</div>
+		<TmYears />
+	</section>
+
+	<section>
 		<h1 class="eyebrow">Moadim & other</h1>
 		<ul class="other he" dir="rtl">
 			{#each other as [heading, list] (heading)}
@@ -59,6 +68,11 @@
 	}
 	h1.eyebrow {
 		margin-bottom: 12px;
+	}
+	.head {
+		display: flex;
+		justify-content: space-between;
+		align-items: baseline;
 	}
 	.sefarim {
 		display: grid;

@@ -1,5 +1,6 @@
 // A note is a Markdown file with YAML frontmatter. Files live in the notes repo:
 //   ls/{sicha id}.md       notes on one Likkutei Sichos entry (the checklist state lives here too)
+//   tm/{entry id}.md       the same for a Toras Menachem entry, e.g. tm/tm-5720-01-16b.md
 //   thoughts/{slug}.md     free-standing ideas that link to sichos with [[ls-15-7]]
 //   log/{slug}.md          favorites from Toras Menachem and Igros
 import { Document, isMap, isSeq, parse } from 'yaml';
@@ -15,6 +16,8 @@ export interface Section {
 export interface Note {
 	path: string;
 	status?: Status;
+	/** Starred — for Toras Menachem, the "sichos I like" log. */
+	favorite?: boolean;
 	/** ISO dates, one per time through. */
 	learned: string[];
 	tags: string[];
@@ -28,7 +31,7 @@ export interface Note {
 	body: string;
 }
 
-const KNOWN = ['status', 'learned', 'tags', 'auto_tags', 'sections', 'title'];
+const KNOWN = ['status', 'favorite', 'learned', 'tags', 'auto_tags', 'sections', 'title'];
 
 export const emptyNote = (path: string): Note => ({ path, learned: [], tags: [], auto_tags: [], extra: {}, body: '' });
 
@@ -40,6 +43,7 @@ export function parseNote(path: string, text: string): Note {
 	return {
 		path,
 		status: fm.status as Status | undefined,
+		favorite: fm.favorite === true || undefined,
 		learned: list(fm.learned),
 		tags: list(fm.tags),
 		auto_tags: list(fm.auto_tags),
@@ -54,6 +58,7 @@ export function serializeNote(n: Note): string {
 	const fm: Record<string, unknown> = {};
 	if (n.title) fm.title = n.title;
 	if (n.status) fm.status = n.status;
+	if (n.favorite) fm.favorite = true;
 	if (n.learned.length) fm.learned = n.learned;
 	if (n.sections) fm.sections = n.sections.map((s) => (s.note ? s : { name: s.name, done: s.done }));
 	if (n.tags.length) fm.tags = n.tags;

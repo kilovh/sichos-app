@@ -2,11 +2,15 @@
 // Saves go into a persisted queue and are written to the notes repo one at a time, in order.
 import { get, set } from 'idb-keyval';
 import { dev } from '$app/env';
-import type { Sicha } from './catalog/types';
+import { resolve } from '$app/paths';
+import type { Farbrengen, Sicha } from './catalog/types';
+import { citation } from './format';
+import { hebrewNumeral } from './hebrew';
 import { ConflictError, GitHubBackend, LocalBackend, type Backend, type GitHubConfig } from './notes/backend';
 import { emptyNote, mergeNotes, parseNote, references, serializeNote, type Note } from './notes/note';
 
 const CATALOG = 'catalog/ls.json';
+const CATALOG_TM = 'catalog/tm.json';
 const CONFIG_KEY = 'sichos.github';
 
 interface Cached {
@@ -24,7 +28,12 @@ interface Pending {
 export type SyncState = 'idle' | 'syncing' | 'offline' | 'error' | 'unconfigured';
 
 export const today = () => new Date().toLocaleDateString('sv');
-export const notePath = (id: string) => `ls/${id}.md`;
+/** `ls-15-7` → `ls/ls-15-7.md`, `tm-5720-01-16b` → `tm/tm-5720-01-16b.md`. */
+export const notePath = (id: string) => `${id.split('-')[0]}/${id}.md`;
+export const idOf = (path: string) => path.match(/^(?:ls|tm)\/(.+)\.md$/)?.[1];
+
+/** `ט"ז תשרי תש"כ`; day 0 means mafteiach doesn't know the day. */
+export const tmDate = (f: Farbrengen) => `${f.day ? `${hebrewNumeral(f.day)} ` : ''}${f.month} ${f.yearLabel}`;
 
 const idb = {
 	get: async <T>(k: string) => {
@@ -51,6 +60,7 @@ function readConfig(): GitHubConfig | null {
 
 class Store {
 	catalog = $state.raw<Sicha[]>([]);
+	tm = $state.raw<Farbrengen[]>([]);
 	notes = $state.raw<Record<string, Note>>({});
 	syncState = $state<SyncState>('idle');
 	syncMessage = $state('');
@@ -59,6 +69,12 @@ class Store {
 	ready = $state(false);
 
 	byId = $derived(new Map(this.catalog.map((s) => [s.id, s])));
+	tmById = $derived(new Map(this.tm.map((f) => [f.id, f])));
+	tmYears = $derived.by(() => {
+		const years = new Map<number, Farbrengen[]>();
+		for (const f of this.tm) years.set(f.year, [...(years.get(f.year) ?? []), f]);
+		return years;
+	});
 	volumes = $derived.by(() => {
 		const vols = new Map<number, Sicha[]>();
 		for (const s of this.catalog) {
@@ -128,6 +144,12 @@ class Store {
 				this.catalog = JSON.parse(catalog.text);
 			} catch {}
 		}
+		const tm = this.cache[CATALOG_TM];
+		if (tm) {
+			try {
+				this.tm = JSON.parse(tm.text);
+			} catch {}
+		}
 		const notes: Record<string, Note> = {};
 		for (const [path, { text }] of Object.entries(this.cache)) {
 			if (path.endsWith('.md') && !path.startsWith('.')) notes[path] = parseNote(path, text);
@@ -144,7 +166,7 @@ class Store {
 			await this.flush();
 			const tree = await this.backend.tree();
 			const wanted = [...tree].filter(
-				([p, sha]) => (p === CATALOG || p.endsWith('.md')) && this.cache[p]?.sha !== sha
+				([p, sha]) => (p === CATALOG || p === CATALOG_TM || p.endsWith('.md')) && this.cache[p]?.sha !== sha
 			);
 			for (let i = 0; i < wanted.length; i += 8) {
 				await Promise.all(
@@ -231,6 +253,32 @@ class Store {
 
 	isLearned(id: string) {
 		return this.notes[notePath(id)]?.status === 'learned';
+	}
+
+	isFavorite(id: string) {
+		return Boolean(this.notes[notePath(id)]?.favorite);
+	}
+
+	toggleFavorite(id: string) {
+		const n = this.note(id);
+		this.save({ ...n, favorite: !n.favorite || undefined }, `${n.favorite ? 'unstar' : 'star'} ${id}`);
+	}
+
+	/** Display name and address for anything a note can link to: a sicha, a TM entry, or a note. */
+	label(id: string): { title: string; cite: string; href: string } | undefined {
+		const s = this.byId.get(id);
+		if (s) return { title: s.title, cite: citation(s), href: resolve('/s/[id]', { id }) };
+		const f = this.tmById.get(id);
+		if (f) return { title: f.title, cite: tmDate(f), href: resolve('/t/[id]', { id }) };
+	}
+
+	/** Same, for a note file — the thing it's about, or its own title. */
+	labelOfPath(path: string) {
+		const id = idOf(path);
+		const l = id && this.label(id);
+		if (l) return l;
+		const n = this.notes[path];
+		return { title: n?.title ?? path, cite: '', href: resolve('/notes/[...path]', { path: path.replace(/\.md$/, '') }) };
 	}
 
 	toggleLearned(id: string) {

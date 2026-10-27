@@ -2,7 +2,7 @@
 	import { resolve } from '$app/paths';
 	import SichaRow from '#lib/components/SichaRow.svelte';
 	import VolumeGrid from '#lib/components/VolumeGrid.svelte';
-	import { citation, prettyDate } from '#lib/format.ts';
+	import { prettyDate } from '#lib/format.ts';
 	import { store } from '#lib/store.svelte.ts';
 
 	const all = $derived(store.progress(store.catalog));
@@ -19,11 +19,7 @@
 	});
 
 	const recent = $derived(store.recent(6));
-	const titleOf = (path: string) => {
-		const id = path.match(/^ls\/(.+)\.md$/)?.[1];
-		const s = id && store.byId.get(id);
-		return s ? { text: s.title, cite: citation(s), href: resolve('/s/[id]', { id: s.id }) } : null;
-	};
+	const tmStars = $derived(store.tm.filter((f) => store.isFavorite(f.id)).length);
 </script>
 
 <main class="page">
@@ -48,11 +44,11 @@
 			<h2 class="eyebrow">Recently</h2>
 			<ul class="recent">
 				{#each recent as n (n.path)}
-					{@const t = titleOf(n.path)}
+					{@const t = store.labelOfPath(n.path)}
 					<li>
-						<a href={t?.href ?? resolve('/notes/[...path]', { path: n.path.replace(/\.md$/, '') })}>
-							<span class="he" dir="auto">{t?.text ?? n.title ?? n.path}</span>
-							{#if t}<span class="he muted cite">{t.cite}</span>{/if}
+						<a href={t.href}>
+							<span class="he" dir="auto">{t.title}</span>
+							{#if t.cite}<span class="he muted cite">{t.cite}</span>{/if}
 						</a>
 						{#if n.learned.length}<span class="ui muted">{prettyDate(n.learned.at(-1)!)}</span>{/if}
 					</li>
@@ -67,6 +63,13 @@
 			<a class="ui muted" href={resolve('/browse')}>By parsha & moed →</a>
 		</div>
 		<VolumeGrid />
+	</section>
+
+	<section>
+		<div class="head">
+			<h2 class="eyebrow">Toras Menachem</h2>
+			<a class="ui muted" href={resolve('/tm')}>{tmStars ? `${tmStars} favorites →` : 'Browse by year →'}</a>
+		</div>
 	</section>
 </main>
 

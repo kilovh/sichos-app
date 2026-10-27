@@ -62,15 +62,7 @@
 		newTag = '';
 	}
 
-	const titleOf = (path: string) => {
-		const n = store.notes[path];
-		const sid = path.match(/^ls\/(.+)\.md$/)?.[1];
-		const s = sid && store.byId.get(sid);
-		return {
-			text: s ? `${s.title} · ${citation(s)}` : (n?.title ?? path),
-			href: s ? resolve('/s/[id]', { id: s.id }) : resolve('/notes/[...path]', { path: path.replace(/\.md$/, '') })
-		};
-	};
+
 </script>
 
 {#if !sicha}
@@ -115,6 +107,7 @@
 		<div class="links ui">
 			{#if sicha.links.pdf}<a class="btn primary" href={sicha.links.pdf} target="_blank" rel="noopener">Open sicha ↗</a>{/if}
 			{#if sicha.links.translation}<a class="btn" href={sicha.links.translation} target="_blank" rel="noopener">Translation ↗</a>{/if}
+			{#if sicha.links.chabadlibrary}<a class="btn" href={sicha.links.chabadlibrary} target="_blank" rel="noopener">Chabad Library ↗</a>{/if}
 			{#if sicha.links.mafteiach}<a class="btn" href={sicha.links.mafteiach} target="_blank" rel="noopener">Kitzur on Mafteiach ↗</a>{/if}
 		</div>
 
@@ -197,8 +190,8 @@
 				<h2 class="eyebrow">Mentioned in</h2>
 				<ul class="mentions">
 					{#each mentions as path (path)}
-						{@const t = titleOf(path)}
-						<li><a href={t.href} class="he" dir="auto">{t.text}</a></li>
+						{@const t = store.labelOfPath(path)}
+						<li><a href={t.href} class="he" dir="auto">{t.title}{t.cite ? ` · ${t.cite}` : ''}</a></li>
 					{/each}
 				</ul>
 			</section>

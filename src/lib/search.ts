@@ -1,12 +1,12 @@
 import MiniSearch from 'minisearch';
-import type { Sicha } from './catalog/types';
+import type { Farbrengen, Sicha } from './catalog/types';
 import { normalize } from './hebrew';
 import type { Note } from './notes/note';
 
 export interface Hit {
 	id: string;
-	type: 'sicha' | 'note';
-	/** For a sicha: its id. For a note: its path. */
+	type: 'sicha' | 'tm' | 'note';
+	/** For a sicha or TM entry: its id. For a note: its path. */
 	ref: string;
 	score: number;
 }
@@ -26,8 +26,11 @@ export function indexTerms(t: string): string[] | null {
 	return terms;
 }
 
-/** One searchable document per catalog entry (with its notes folded in) and one per free-standing note. */
-export function buildIndex(catalog: Sicha[], notes: Record<string, Note>) {
+/**
+ * One searchable document per catalog entry — sicha or TM entry, with its notes folded in — and one per
+ * free-standing note.
+ */
+export function buildIndex(catalog: Sicha[], notes: Record<string, Note>, tm: Farbrengen[] = []) {
 	const index = new MiniSearch({
 		fields: ['title', 'groups', 'summary', 'body', 'tags'],
 		storeFields: ['type', 'ref'],
@@ -54,8 +57,21 @@ export function buildIndex(catalog: Sicha[], notes: Record<string, Note>) {
 				tags: n ? [...n.tags, ...n.auto_tags].join(' ') : ''
 			};
 		});
+	for (const f of tm) {
+		const n = notes[`tm/${f.id}.md`];
+		docs.push({
+			id: f.id,
+			type: 'tm',
+			ref: f.id,
+			title: f.title,
+			groups: `${f.month} ${f.yearLabel}`,
+			summary: '',
+			body: n?.body ?? '',
+			tags: n ? [...n.tags, ...n.auto_tags].join(' ') : ''
+		});
+	}
 	for (const [path, n] of Object.entries(notes)) {
-		if (path.startsWith('ls/')) continue;
+		if (path.startsWith('ls/') || path.startsWith('tm/')) continue;
 		docs.push({
 			id: path,
 			type: 'note',
@@ -68,5 +84,10 @@ export function buildIndex(catalog: Sicha[], notes: Record<string, Note>) {
 		});
 	}
 	index.addAll(docs);
-	return (q: string): Hit[] => index.search(q).map((r) => ({ id: r.id, type: r.type, ref: r.ref, score: r.score }));
+	// Every word must match (פורים תשי"ח → that Purim); if nothing does, fall back to any word.
+	return (q: string): Hit[] => {
+		let results = index.search(q, { combineWith: 'AND' });
+		if (!results.length) results = index.search(q);
+		return results.map((r) => ({ id: r.id, type: r.type, ref: r.ref, score: r.score }));
+	};
 }

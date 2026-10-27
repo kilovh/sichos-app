@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
 	import SichaRow from '#lib/components/SichaRow.svelte';
+	import TmRow from '#lib/components/TmRow.svelte';
 	import { buildIndex } from '#lib/search.ts';
 	import { store } from '#lib/store.svelte.ts';
 
@@ -8,13 +9,13 @@
 	let filter = $state<'all' | 'learned' | 'unlearned' | 'noted'>('all');
 
 	// Rebuilt when notes change; ~2k small documents, so this stays fast.
-	const search = $derived(buildIndex(store.catalog, store.notes));
+	const search = $derived(buildIndex(store.catalog, store.notes, store.tm));
 	const hits = $derived.by(() => {
 		if (q.trim().length < 2) return [];
 		return search(q)
 			.filter((h) => {
 				if (h.type === 'note') return filter === 'all' || filter === 'noted';
-				const n = store.notes[`ls/${h.ref}.md`];
+				const n = store.notes[`${h.type === 'tm' ? 'tm' : 'ls'}/${h.ref}.md`];
 				if (filter === 'learned') return n?.status === 'learned';
 				if (filter === 'unlearned') return n?.status !== 'learned';
 				if (filter === 'noted') return Boolean(n?.body.trim());
@@ -26,7 +27,7 @@
 
 <main class="page">
 	<!-- svelte-ignore a11y_autofocus -->
-	<input class="q" type="search" bind:value={q} placeholder="Search sichos and notes — חפש…" dir="auto" autofocus />
+	<input class="q" type="search" bind:value={q} placeholder="Search sichos, Toras Menachem and notes — חפש…" dir="auto" autofocus />
 	<div class="filters ui">
 		{#each ['all', 'unlearned', 'learned', 'noted'] as f (f)}
 			<button class:on={filter === f} onclick={() => (filter = f as typeof filter)}>{f === 'noted' ? 'with notes' : f}</button>
@@ -39,6 +40,9 @@
 			{#if h.type === 'sicha'}
 				{@const s = store.byId.get(h.ref)}
 				{#if s}<SichaRow sicha={s} showVolume />{/if}
+			{:else if h.type === 'tm'}
+				{@const f = store.tmById.get(h.ref)}
+				{#if f}<TmRow entry={f} showYear />{/if}
 			{:else}
 				{@const n = store.notes[h.ref]}
 				<a class="note" href={resolve('/notes/[...path]', { path: h.ref.replace(/\.md$/, '') })}>

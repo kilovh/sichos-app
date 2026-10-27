@@ -2,7 +2,6 @@
 	import { page } from '$app/state';
 	import { resolve } from '$app/paths';
 	import NoteEditor from '#lib/components/NoteEditor.svelte';
-	import { citation } from '#lib/format.ts';
 	import { emptyNote, references } from '#lib/notes/note.ts';
 	import { sourceLabel, sourceSearch, type Source } from '#lib/notes/sources.ts';
 	import { store } from '#lib/store.svelte.ts';
@@ -10,7 +9,11 @@
 	const path = $derived(`${page.params.path}.md`);
 	const note = $derived(store.notes[path] ?? emptyNote(path));
 	const source = $derived(note.extra.source as Source | undefined);
-	const linked = $derived(references(note.body).map((id) => store.byId.get(id)).filter((s) => s !== undefined));
+	const linked = $derived(
+		references(note.body)
+			.map((id) => ({ id, label: store.label(id) }))
+			.filter((x) => x.label !== undefined)
+	);
 
 	let title = $state('');
 	$effect(() => {
@@ -41,12 +44,12 @@
 
 	{#if linked.length}
 		<section>
-			<h2 class="eyebrow">Sichos linked here</h2>
+			<h2 class="eyebrow">Linked here</h2>
 			<ul>
-				{#each linked as s (s.id)}
+				{#each linked as { id, label } (id)}
 					<li>
-						<a class="he" href={resolve('/s/[id]', { id: s.id })}>{s.title} · {citation(s)}</a>
-						{#if store.isLearned(s.id)}<span class="ui muted">✓</span>{/if}
+						<a class="he" href={label!.href}>{label!.title} · {label!.cite}</a>
+						{#if store.isLearned(id)}<span class="ui muted">✓</span>{/if}
 					</li>
 				{/each}
 			</ul>

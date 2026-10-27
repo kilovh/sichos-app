@@ -14,7 +14,7 @@
 
 	const nav = [
 		{ href: resolve('/'), label: 'Home', match: (p: string) => p === '/' },
-		{ href: resolve('/browse'), label: 'Browse', match: (p: string) => /^\/(browse|vol|parsha|group)/.test(p) },
+		{ href: resolve('/browse'), label: 'Browse', match: (p: string) => /^\/(browse|vol|parsha|group|tm|t\/)/.test(p) },
 		{ href: resolve('/search'), label: 'Search', match: (p: string) => p.startsWith('/search') },
 		{ href: resolve('/notes'), label: 'Notes', match: (p: string) => p.startsWith('/notes') }
 	];

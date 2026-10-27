@@ -16,5 +16,23 @@ export interface Sicha {
 		pdf?: string;
 		translation?: string;
 		mafteiach?: string;
+		/** Full text on chabadlibrary.org (volumes 30–39 only). */
+		chabadlibrary?: string;
 	};
+}
+
+/** A dated talk — farbrengen, sicha, bracha — from mafteiach's calendar; most are in Toras Menachem. */
+export interface Farbrengen {
+	/** `tm-{mafteiach date code}`, e.g. `tm-5720-01-16b`. Notes files are named after it. */
+	id: string;
+	year: number;
+	/** The year as mafteiach writes it, e.g. `תש"כ`. */
+	yearLabel: string;
+	/** Hebrew month name, e.g. `תשרי`, `אדר ראשון`. */
+	month: string;
+	day: number;
+	/** The occasion, e.g. `יום ב' דחה"ס`. */
+	title: string;
+	/** mafteiach's page for it: sources, PDF, summary. */
+	url: string;
 }

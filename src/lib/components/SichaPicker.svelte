@@ -1,25 +1,38 @@
 <script lang="ts">
-	import type { Sicha } from '#lib/catalog/types.ts';
-	import { runs } from '#lib/catalog/views.ts';
+	import type { Farbrengen, Sicha } from '#lib/catalog/types.ts';
 	import { citation, volLabel } from '#lib/format.ts';
 	import { hebrewNumeral, normalize } from '#lib/hebrew.ts';
 	import { buildIndex } from '#lib/search.ts';
-	import { store } from '#lib/store.svelte.ts';
+	import { store, tmDate } from '#lib/store.svelte.ts';
 
-	let { onpick, onclose }: { onpick: (s: Sicha) => void; onclose: () => void } = $props();
+	let { onpick, onclose }: { onpick: (entry: Sicha | Farbrengen) => void; onclose: () => void } = $props();
 
+	interface Item {
+		entry: Sicha | Farbrengen;
+		title: string;
+		cite: string;
+		summary?: string;
+		heading?: string;
+	}
+
+	let scope = $state<'ls' | 'tm'>('ls');
 	let q = $state('');
-	let vol = $state<number>();
+	/** Selected volume (LS) or year (TM). */
+	let group = $state<number>();
 	let active = $state(0);
 	let input = $state<HTMLInputElement>();
 	let list = $state<HTMLElement>();
 
-	// Catalog only — notes aren't link targets here, and this keeps the index cheap to build.
-	const search = $derived(buildIndex(store.catalog, {}));
+	// Catalog only — notes aren't link targets here, and this keeps the indexes cheap to build.
+	const lsSearch = $derived(buildIndex(store.catalog, {}));
+	const tmSearch = $derived(buildIndex([], {}, store.tm));
+
+	const lsItem = (s: Sicha): Item => ({ entry: s, title: s.title, cite: citation(s), summary: s.summary, heading: s.groups[0] });
+	const tmItem = (f: Farbrengen): Item => ({ entry: f, title: f.title, cite: tmDate(f), heading: f.month });
 
 	/** "15 34", "15:34", "15/34" → the sicha in volume 15 that page 34 falls in. */
 	function byAddress(query: string): Sicha[] {
-		const m = query.trim().match(/^(\d{1,2})\s*[\s:/,.]\s*(\d{1,3})$/);
+		const m = query.trim().match(/^(\d{1,2})\s*[\s:/,.]\s*(\d{1,4})$/);
 		if (!m) return [];
 		const [v, page] = [Number(m[1]), Number(m[2])];
 		const inVol = (store.volumes.get(v) ?? []).filter((s) => s.page && s.page <= page);
@@ -27,23 +40,45 @@
 		return hit ? [hit] : [];
 	}
 
-	const results = $derived.by((): Sicha[] => {
+	/** Search hits, with titles that start with the query (נח → נח, נח א…) first, in catalog order. */
+	function ranked<T extends { id: string; title: string }>(
+		hits: { ref: string }[],
+		byId: Map<string, T>,
+		order: (t: T) => number
+	) {
+		const nq = normalize(q.trim());
+		return hits
+			.map((h) => byId.get(h.ref))
+			.filter((x): x is T => Boolean(x))
+			.map((x, rank) => ({ x, rank, title: normalize(x.title).startsWith(nq) }))
+			.sort((a, b) => Number(b.title) - Number(a.title) || (a.title ? order(a.x) - order(b.x) : a.rank - b.rank))
+			.map((r) => r.x);
+	}
+
+	const items = $derived.by((): Item[] => {
 		const query = q.trim();
-		if (!query) return vol ? (store.volumes.get(vol) ?? []).filter((s) => s.kind === 'sicha') : [];
-		const direct = byAddress(query);
-		// Titles that start with the query (נח → נח, נח א, נח ב…) come first, in volume order.
-		const nq = normalize(query);
-		const found = search(query)
-			.map((h) => store.byId.get(h.ref))
-			.filter((s): s is Sicha => Boolean(s) && (!vol || s!.vol === vol))
-			.map((s, rank) => ({ s, rank, title: normalize(s.title).startsWith(nq) }))
-			.sort((a, b) => Number(b.title) - Number(a.title) || (a.title ? a.s.vol - b.s.vol : a.rank - b.rank))
-			.map((x) => x.s);
-		return [...direct, ...found.filter((s) => !direct.includes(s))].slice(0, 40);
+		if (scope === 'ls') {
+			if (!query) return group ? (store.volumes.get(group) ?? []).filter((s) => s.kind === 'sicha').map(lsItem) : [];
+			const direct = byAddress(query);
+			const found = ranked(lsSearch(query), store.byId, (s) => s.vol).filter((s) => !group || s.vol === group);
+			return [...direct, ...found.filter((s) => !direct.includes(s))].slice(0, 40).map(lsItem);
+		}
+		if (!query) return group ? (store.tmYears.get(group) ?? []).map(tmItem) : [];
+		return ranked(tmSearch(query), store.tmById, (f) => f.year)
+			.filter((f) => !group || f.year === group)
+			.slice(0, 40)
+			.map(tmItem);
 	});
 
+	const groups = $derived(
+		scope === 'ls'
+			? [...store.volumes.keys()].map((v) => ({ key: v, label: hebrewNumeral(v) }))
+			: [...store.tmYears].map(([y, e]) => ({ key: y, label: e[0].yearLabel }))
+	);
+	const browsing = $derived(!q.trim() && group !== undefined);
+
 	$effect(() => {
-		results;
+		items;
 		active = 0;
 	});
 
@@ -51,77 +86,82 @@
 		input?.focus();
 	});
 
+	function setScope(s: typeof scope) {
+		scope = s;
+		group = undefined;
+		input?.focus();
+	}
+
 	function keydown(e: KeyboardEvent) {
 		if (e.key === 'Escape') {
 			e.preventDefault();
 			onclose();
 		} else if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
 			e.preventDefault();
-			const n = results.length;
+			const n = items.length;
 			if (!n) return;
 			active = (active + (e.key === 'ArrowDown' ? 1 : n - 1)) % n;
 			list?.querySelectorAll('button.result')[active]?.scrollIntoView({ block: 'nearest' });
-		} else if (e.key === 'Enter' && results[active]) {
+		} else if (e.key === 'Enter' && items[active]) {
 			e.preventDefault();
-			onpick(results[active]);
+			onpick(items[active].entry);
 		}
 	}
-
-	const grouped = $derived(!q.trim() && vol ? runs(results) : null);
 </script>
 
 <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
 <div class="backdrop" onclick={onclose}></div>
 <div class="picker card" role="dialog" aria-label="Link a sicha" tabindex="-1" onkeydown={keydown}>
+	<div class="scopes" dir="rtl">
+		<button class:on={scope === 'ls'} onclick={() => setScope('ls')}>ליקוטי שיחות</button>
+		<button class:on={scope === 'tm'} onclick={() => setScope('tm')}>תורת מנחם</button>
+	</div>
 	<input
 		bind:this={input}
 		bind:value={q}
 		class="q"
 		dir="auto"
-		placeholder="Search, or volume and page: 15 34"
+		placeholder={scope === 'ls' ? 'Search, or volume and page: 15 34' : 'Search an occasion: פורים, י"ט כסלו…'}
 		autocomplete="off"
 		spellcheck="false"
 	/>
-	<div class="vols ui" dir="rtl">
-		{#each [...store.volumes.keys()] as v (v)}
-			<button class:on={vol === v} onclick={() => ((vol = vol === v ? undefined : v), input?.focus())}>
-				{hebrewNumeral(v)}
+	<div class="groups ui" dir="rtl">
+		{#each groups as g (g.key)}
+			<button class:on={group === g.key} onclick={() => ((group = group === g.key ? undefined : g.key), input?.focus())}>
+				{g.label}
 			</button>
 		{/each}
 	</div>
 
 	<div class="results" bind:this={list}>
-		{#snippet row(s: Sicha, i: number)}
+		{#each items as item, i (item.entry.id)}
+			{#if browsing && item.heading !== items[i - 1]?.heading}
+				<p class="heading he" dir="rtl">{item.heading}</p>
+			{/if}
 			<button
 				class="result he"
 				class:active={i === active}
 				dir="rtl"
 				onmousemove={() => (active = i)}
-				onclick={() => onpick(s)}
+				onclick={() => onpick(item.entry)}
 			>
-				<span class="title">{s.title}</span>
-				<span class="cite">{citation(s)}</span>
-				{#if store.isLearned(s.id)}<span class="done ui" title="Learned">✓</span>{/if}
-				{#if s.summary}<span class="summary">{s.summary}</span>{/if}
+				<span class="title">{item.title}</span>
+				<span class="cite">{item.cite}</span>
+				<span class="marks ui">
+					{#if store.isLearned(item.entry.id)}<span class="done" title="Learned">✓</span>{/if}
+					{#if store.isFavorite(item.entry.id)}<span class="fav" title="Favorite">★</span>{/if}
+				</span>
+				{#if item.summary}<span class="summary">{item.summary}</span>{/if}
 			</button>
-		{/snippet}
-
-		{#if grouped}
-			{@const flat = results}
-			{#each grouped as run, r (r)}
-				<p class="heading he" dir="rtl">{run.heading}</p>
-				{#each run.sichos as s (s.id)}{@render row(s, flat.indexOf(s))}{/each}
-			{/each}
-		{:else if results.length}
-			{#each results as s, i (s.id)}{@render row(s, i)}{/each}
 		{:else}
 			<p class="empty ui muted">
-				{q.trim() ? 'No match.' : 'Type to search titles and summaries, or pick a volume above.'}
+				{q.trim() ? 'No match.' : `Type to search, or pick a ${scope === 'ls' ? 'volume' : 'year'} above.`}
 			</p>
-		{/if}
+		{/each}
 	</div>
 	<p class="foot ui muted">
-		↑↓ to move · Enter to insert · Esc to close{vol ? ` · in ${volLabel(vol)}` : ''} — the link is also copied
+		↑↓ to move · Enter to insert · Esc to close{scope === 'ls' && group ? ` · in ${volLabel(group)}` : ''} — the
+		link is also copied
 	</p>
 </div>
 
@@ -145,22 +185,42 @@
 		box-shadow: 0 18px 50px rgb(0 0 0 / 0.18);
 		overflow: hidden;
 	}
+	.scopes,
 	.q,
-	.vols,
+	.groups,
 	.foot {
 		flex: none;
+	}
+	.scopes {
+		display: flex;
+		gap: 4px;
+		padding: 8px 10px 0;
+		border-bottom: 1px solid var(--line);
+	}
+	.scopes button {
+		border: 0;
+		background: none;
+		padding: 4px 10px 7px;
+		margin-bottom: -1px;
+		font: 500 15px var(--he);
+		color: var(--muted);
+		border-bottom: 2px solid transparent;
+	}
+	.scopes button.on {
+		color: var(--ink);
+		border-bottom-color: var(--accent);
 	}
 	.q {
 		border: 0;
 		border-bottom: 1px solid var(--line);
 		background: none;
-		padding: 14px 16px;
+		padding: 12px 16px;
 		font: 19px var(--serif), var(--he);
 	}
 	.q:focus {
 		outline: none;
 	}
-	.vols {
+	.groups {
 		display: flex;
 		gap: 4px;
 		padding: 8px 10px;
@@ -168,7 +228,7 @@
 		border-bottom: 1px solid var(--line);
 		scrollbar-width: none;
 	}
-	.vols button {
+	.groups button {
 		flex: none;
 		border: 1px solid var(--line);
 		background: none;
@@ -177,7 +237,7 @@
 		font: 14px var(--he);
 		color: var(--muted);
 	}
-	.vols button.on {
+	.groups button.on {
 		background: var(--accent);
 		border-color: var(--accent);
 		color: var(--bg);
@@ -208,8 +268,15 @@
 		color: var(--faint);
 		font-size: 14px;
 	}
+	.marks {
+		display: flex;
+		gap: 4px;
+	}
 	.done {
 		color: var(--done);
+	}
+	.fav {
+		color: var(--warn);
 	}
 	.summary {
 		grid-column: 1 / -1;

@@ -12,7 +12,9 @@
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
 		"test:unit": "vitest",
 		"test": "npm run test:unit -- --run",
-		"catalog": "node scripts/build-catalog.ts"
+		"catalog": "node scripts/build-catalog.ts",
+		"catalog:tm": "node scripts/build-tm.ts",
+		"catalog:chabadlibrary": "node scripts/build-chabadlibrary.ts"
 	},
 	"devDependencies": {
 		"@sveltejs/adapter-static": "^4.0.0",

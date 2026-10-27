@@ -17,13 +17,16 @@ npm test
 npm run check
 ```
 
-## Catalog
+## Catalogs
+
+Built once by scripts that fetch politely (one request at a time, cached in `.cache/` so nothing is fetched twice; `-- --refresh` to refetch):
 
 ```sh
-npm run catalog            # rebuilds ../notes/catalog/ls.json from mafteiach.app (cached in .cache/)
-npm run catalog -- --refresh
+npm run catalog:chabadlibrary  # maps LS volumes 30–39 to their full-text pages on chabadlibrary.org
+npm run catalog                # ../notes/catalog/ls.json — Likkutei Sichos, from mafteiach.app (+ the map above)
+npm run catalog:tm             # ../notes/catalog/tm.json — the Toras Menachem calendar, from mafteiach.app
 ```
 
-Problems found while parsing (duplicate links, missing summaries) are listed in `.cache/catalog-problems.txt`.
+Problems found while parsing (duplicate links, missing summaries, unmatched pages) are listed in `.cache/catalog-problems.txt`.
 
-Catalog data courtesy of [mafteiach.app](https://mafteiach.app).
+Catalog data courtesy of [mafteiach.app](https://mafteiach.app); full-text links to [chabadlibrary.org](https://chabadlibrary.org).

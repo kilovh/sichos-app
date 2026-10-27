@@ -63,7 +63,11 @@
 	</section>
 
 	<section>
-		<h1 class="eyebrow">Toras Menachem & Igros</h1>
+		<h1 class="eyebrow">Igros & other sources</h1>
+		<p class="ui muted lead">
+			Toras Menachem has its own calendar under <a href={resolve('/tm')}>Browse → Toras Menachem</a>; use this for
+			Igros Kodesh, or for anything that isn't there.
+		</p>
 		<form class="source card ui" onsubmit={logSource}>
 			<select bind:value={src.work}>
 				{#each Object.entries(WORKS) as [k, w] (k)}<option value={k}>{w.name}</option>{/each}
@@ -96,6 +100,12 @@
 	}
 	h1.eyebrow {
 		margin-bottom: 10px;
+	}
+	.lead {
+		margin: 0 0 10px;
+	}
+	.lead a {
+		color: var(--accent);
 	}
 	.new,
 	.source {

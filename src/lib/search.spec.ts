@@ -35,3 +35,17 @@ describe('search', () => {
 		expect(search('dream')[0]).toMatchObject({ type: 'note', ref: 'thoughts/galus.md' });
 	});
 });
+
+describe('search with Toras Menachem', () => {
+	const tmSearch = buildIndex([], {}, [
+		{ id: 'tm-5718-06-14', year: 5718, yearLabel: 'תשי"ח', month: 'אדר', day: 14, title: 'פורים', url: '' },
+		{ id: 'tm-5720-01-16', year: 5720, yearLabel: 'תש"כ', month: 'תשרי', day: 16, title: `יום ב' דחה"ס`, url: '' }
+	]);
+
+	it('finds entries by occasion and by year', () => {
+		expect(tmSearch('פורים')[0]).toMatchObject({ type: 'tm', ref: 'tm-5718-06-14' });
+		expect(tmSearch('תש"כ')[0].ref).toBe('tm-5720-01-16');
+		expect(tmSearch('פורים תש"כ')[0].ref).toBe('tm-5718-06-14'); // nothing matches both → any word
+		expect(tmSearch('פורים תשי"ח').map((h) => h.ref)).toEqual(['tm-5718-06-14']);
+	});
+});
