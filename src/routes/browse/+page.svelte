@@ -13,12 +13,12 @@
 
 <main class="page">
 	<section>
-		<h1 class="eyebrow">Volumes</h1>
+		<h1 class="eyebrow">Likkutei Sichos · by volume</h1>
 		<VolumeGrid />
 	</section>
 
 	<section>
-		<h1 class="eyebrow">Parshiyos</h1>
+		<h1 class="eyebrow">Likkutei Sichos · by parsha</h1>
 		<div class="sefarim he" dir="rtl">
 			{#each SEFARIM as sefer (sefer.name)}
 				<div>
@@ -41,6 +41,20 @@
 	</section>
 
 	<section>
+		<h1 class="eyebrow">Likkutei Sichos · moadim & other</h1>
+		<ul class="other he" dir="rtl">
+			{#each other as [heading, list] (heading)}
+				<li>
+					<a href={resolve('/group/[name]', { name: heading })}>
+						{heading}
+						<span class="ui count">{list.length}</span>
+					</a>
+				</li>
+			{/each}
+		</ul>
+	</section>
+
+	<section>
 		<div class="head">
 			<h1 class="eyebrow">Toras Menachem · by year</h1>
 			<a class="ui muted" href={resolve('/tm')}>Favorites →</a>
@@ -56,19 +70,6 @@
 		<IgVolumes />
 	</section>
 
-	<section>
-		<h1 class="eyebrow">Moadim & other</h1>
-		<ul class="other he" dir="rtl">
-			{#each other as [heading, list] (heading)}
-				<li>
-					<a href={resolve('/group/[name]', { name: heading })}>
-						{heading}
-						<span class="ui count">{list.length}</span>
-					</a>
-				</li>
-			{/each}
-		</ul>
-	</section>
 </main>
 
 <style>

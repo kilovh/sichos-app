@@ -57,6 +57,20 @@ const idb = {
 	}
 };
 
+function readPref(key: string) {
+	try {
+		return localStorage.getItem(key);
+	} catch {
+		return null;
+	}
+}
+
+function writePref(key: string, value: string) {
+	try {
+		localStorage.setItem(key, value);
+	} catch {}
+}
+
 function readConfig(): GitHubConfig | null {
 	try {
 		return JSON.parse(localStorage.getItem(CONFIG_KEY) ?? 'null');
@@ -314,15 +328,31 @@ class Store {
 		}
 	}
 
+	/**
+	 * Whether the checklist counts the הוספות (letters and additions at the back of each volume) along
+	 * with the sichos. A per-device preference, toggled on Home.
+	 */
+	countAdditions = $state(readPref('sichos.countAdditions') === 'true');
+
+	setCountAdditions(on: boolean) {
+		this.countAdditions = on;
+		writePref('sichos.countAdditions', String(on));
+	}
+
+	/** What counts toward completion: the sichos, plus the הוספות if that's switched on. */
+	counts(s: Sicha) {
+		return s.kind === 'sicha' || (this.countAdditions && s.kind === 'hosafa');
+	}
+
 	progress(sichos: Sicha[]) {
-		const main = sichos.filter((s) => s.kind === 'sicha');
+		const main = sichos.filter((s) => this.counts(s));
 		return { done: main.filter((s) => this.isLearned(s.id)).length, total: main.length };
 	}
 
 	/** Most recently touched notes, newest first. */
-	recent(limit = 8) {
+	recent(limit = 8, prefix = '') {
 		return Object.values(this.notes)
-			.filter((n) => n.learned.length || n.body.trim())
+			.filter((n) => n.path.startsWith(prefix) && (n.learned.length || n.body.trim()))
 			.sort((a, b) => (b.learned.at(-1) ?? '').localeCompare(a.learned.at(-1) ?? ''))
 			.slice(0, limit);
 	}

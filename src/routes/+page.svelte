@@ -1,27 +1,23 @@
 <script lang="ts">
+	// Home is Likkutei Sichos only; Toras Menachem and Igros live under Browse.
 	import { resolve } from '$app/paths';
 	import SichaRow from '#lib/components/SichaRow.svelte';
-	import TmYears from '#lib/components/TmYears.svelte';
 	import VolumeGrid from '#lib/components/VolumeGrid.svelte';
 	import { prettyDate } from '#lib/format.ts';
 	import { store } from '#lib/store.svelte.ts';
 
 	const all = $derived(store.progress(store.catalog));
+	const additions = $derived(store.catalog.filter((s) => s.kind === 'hosafa').length);
 
 	/** The first unlearned sicha after the one learned most recently. */
 	const next = $derived.by(() => {
-		const main = store.catalog.filter((s) => s.kind === 'sicha');
-		const last = store
-			.recent(50)
-			.filter((n) => n.status === 'learned' && n.path.startsWith('ls/'))
-			.at(0);
+		const main = store.catalog.filter((s) => store.counts(s));
+		const last = store.recent(50, 'ls/').find((n) => n.status === 'learned');
 		const from = last ? main.findIndex((s) => `ls/${s.id}.md` === last.path) : -1;
 		return [...main.slice(from + 1), ...main.slice(0, from + 1)].find((s) => !store.isLearned(s.id));
 	});
 
-	const recent = $derived(store.recent(6));
-	const tmStars = $derived(store.tm.filter((f) => store.isFavorite(f.id)).length);
-	const igStars = $derived(store.igros.filter((l) => store.isFavorite(l.id)).length);
+	const recent = $derived(store.recent(6, 'ls/'));
 </script>
 
 <main class="page">
@@ -29,9 +25,18 @@
 		<p class="kicker he">ליקוטי שיחות</p>
 		<p class="count">
 			<span class="big">{all.done.toLocaleString()}</span>
-			<span class="of">of {all.total.toLocaleString()} sichos learned</span>
+			<span class="of">of {all.total.toLocaleString()} {store.countAdditions ? 'sichos & additions' : 'sichos'} learned</span>
 		</p>
 		<div class="bar"><span style:width="{(100 * all.done) / (all.total || 1)}%"></span></div>
+		<p class="scope ui">
+			{#if store.countAdditions}
+				All 39 volumes, counting the {additions.toLocaleString()} הוספות (letters and additions) ·
+				<button onclick={() => store.setCountAdditions(false)}>count sichos only</button>
+			{:else}
+				The sichos of all 39 volumes, not counting the {additions.toLocaleString()} הוספות ·
+				<button onclick={() => store.setCountAdditions(true)}>count them too</button>
+			{/if}
+		</p>
 	</header>
 
 	{#if next}
@@ -66,21 +71,6 @@
 		</div>
 		<VolumeGrid />
 	</section>
-
-	<section>
-		<div class="head">
-			<h2 class="eyebrow">Toras Menachem</h2>
-			<a class="more ui" href={resolve('/tm')}>{tmStars ? `${tmStars} favorites →` : 'Browse by year →'}</a>
-		</div>
-		<TmYears />
-	</section>
-
-	<section>
-		<div class="head">
-			<h2 class="eyebrow">Igros Kodesh</h2>
-			<a class="more ui" href={resolve('/igros')}>{igStars ? `${igStars} favorites →` : 'Find a letter →'}</a>
-		</div>
-	</section>
 </main>
 
 <style>
@@ -91,6 +81,26 @@
 		margin: 0 0 6px;
 		font-size: 17px;
 		color: var(--muted);
+	}
+	.scope {
+		margin: 10px 0 0;
+		font-size: 13px;
+		font-style: italic;
+		color: var(--faint);
+	}
+	.scope button {
+		border: 0;
+		background: none;
+		padding: 0;
+		font: inherit;
+		color: var(--muted);
+		text-decoration: underline;
+		text-decoration-color: var(--line);
+		text-underline-offset: 0.2em;
+	}
+	.scope button:hover {
+		color: var(--red);
+		text-decoration-color: var(--red);
 	}
 	.count {
 		display: flex;
