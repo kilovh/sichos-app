@@ -21,22 +21,35 @@ const META_HEADINGS = ['מפתחות', 'רשימת הדפוסים'];
 
 const text = (el: HTMLElement | null | undefined) => (el?.textContent ?? '').replace(/\s+/g, ' ').trim();
 
+// "הוספות", "הוספה", and one misspelt "הופסות". (No \b: JavaScript doesn't count Hebrew as word characters.)
+const ADDITION = /^(הוספות|הוספה|הופסות)(?=[\s'"-]|$)/;
+
 /**
- * Button labels look like `ח"א ע' 4 (נח)` or `חט"ו ע' 34 (נח א)`.
- * The parenthetical is the sicha's own label; a trailing single numeral is its index within the parsha.
+ * Button labels look like `ח"א ע' 4 (נח)` or `חט"ו ע' 34 (נח א)` — citation, then the sicha's own label
+ * in parentheses (which may itself contain parentheses: `((ערב) חה"ש)`), sometimes followed by a year
+ * in brackets: `חכ"ג ע' 17 (חה"ש א) [תשמ"א]`. A trailing single numeral is the index within the parsha.
  * Additions are flipped: `הוספות - כסלו (חט"ו ע' 506)`.
  */
 export function parseLabel(label: string): { page?: number; title: string; index?: number; kind: Sicha['kind'] } {
 	const page = Number(label.match(/ע['׳]\s*(\d+)/)?.[1]) || undefined;
-	const paren = label.match(/\(([^)]*)\)\s*$/)?.[1].trim();
-	if (label.startsWith('הוספות')) {
-		const title = label.replace(/\([^)]*\)\s*$/, '').replace(/^הוספות\s*-\s*/, '').trim();
-		return { page, title, index: undefined, kind: 'hosafa' };
+	const year = label.match(/\[([^\]]+)\]\s*$/)?.[1];
+	const rest = label.replace(/\s*\[[^\]]+\]\s*$/, '');
+	const withYear = (t: string) => (year ? `${t} [${year}]` : t);
+
+	const flipped = rest.match(/^(.*?)\s*\(([^()]*ע['׳]\s*\d+[^()]*)\)\s*$/);
+	if (flipped && flipped[1]) {
+		const isAddition = ADDITION.test(flipped[1]);
+		const title = flipped[1].replace(/^(הוספות|הוספה|הופסות)\s*-\s*/, '').trim();
+		// The page is the citation's, not a page mentioned in the title ("הוספה למכתב בע' 564").
+		const own = Number(flipped[2].match(/ע['׳]\s*(\d+)/)?.[1]) || page;
+		return { page: own, title: withYear(title), index: undefined, kind: isAddition ? 'hosafa' : 'sicha' };
 	}
-	const title = paren ?? label;
+
+	const open = rest.indexOf('(');
+	const title = open >= 0 ? rest.slice(open + 1, rest.lastIndexOf(')')).trim() : rest;
 	const last = title.split(' ').at(-1)!;
 	const index = title.includes(' ') && last.length <= 2 ? hebrewNumeral(last) : undefined;
-	return { page, title, index, kind: 'sicha' };
+	return { page, title: withYear(title), index, kind: 'sicha' };
 }
 
 /**
@@ -69,6 +82,7 @@ export function parseVolumePage(html: string, vol: number): Sicha[] {
 		button?.querySelector('span')?.remove();
 		const groupLabel = text(button);
 		const isMeta = META_HEADINGS.includes(groupLabel);
+		const isAdditions = ADDITION.test(groupLabel);
 
 		for (const btn of group.querySelectorAll('.likkut-sicha-button')) {
 			const domId = btn.id.replace(/__button$/, '');
@@ -99,7 +113,7 @@ export function parseVolumePage(html: string, vol: number): Sicha[] {
 				page,
 				title,
 				index,
-				kind: isMeta ? 'meta' : kind,
+				kind: isMeta ? 'meta' : isAdditions ? 'hosafa' : kind,
 				groups: [groupLabel],
 				summary: parseSummary(content?.querySelector('.trix-content'), title),
 				links

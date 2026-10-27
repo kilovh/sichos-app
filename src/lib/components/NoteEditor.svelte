@@ -1,8 +1,11 @@
 <script lang="ts">
+	import { tick } from 'svelte';
 	import { resolve } from '$app/paths';
+	import type { Sicha } from '#lib/catalog/types.ts';
 	import { renderMarkdown } from '#lib/markdown.ts';
 	import type { Note } from '#lib/notes/note.ts';
 	import { store } from '#lib/store.svelte.ts';
+	import SichaPicker from './SichaPicker.svelte';
 
 	let {
 		note,
@@ -14,6 +17,9 @@
 	let draft = $state('');
 	let textarea = $state<HTMLTextAreaElement>();
 	let timer: ReturnType<typeof setTimeout> | undefined;
+	/** Open while choosing a sicha to link; `from` is where a typed `[[` starts, if that's what opened it. */
+	let picking = $state<{ from?: number; at: number } | null>(null);
+	let copied = $state('');
 
 	// Take in the stored body when opening a different note, or when a sync brings a newer one —
 	// but never while the user is typing.
@@ -35,6 +41,46 @@
 		clearTimeout(timer);
 		timer = setTimeout(commit, 1200);
 		autosize();
+		const at = textarea?.selectionStart ?? 0;
+		if (draft.slice(at - 2, at) === '[[' && draft[at - 3] !== '[') picking = { from: at - 2, at };
+	}
+
+	async function pickButton() {
+		if (!editing) await open();
+		const at = textarea?.selectionEnd ?? draft.length;
+		picking = { at };
+	}
+
+	async function insert(s: Sicha) {
+		if (!picking) return;
+		const link = `[[${s.id}]]`;
+		const { from = picking.at, at } = picking;
+		// Pad with spaces so the link doesn't fuse with neighbouring words.
+		const before = draft.slice(0, from);
+		const after = draft.slice(at);
+		const pre = before && !/\s$/.test(before) && picking.from === undefined ? ' ' : '';
+		const post = /^\s/.test(after) ? '' : ' ';
+		draft = before + pre + link + post + after;
+		const cursor = (before + pre + link + post).length;
+		picking = null;
+		try {
+			await navigator.clipboard.writeText(link);
+			copied = link;
+			setTimeout(() => (copied = ''), 2500);
+		} catch {}
+		commit();
+		await tick();
+		textarea?.focus();
+		textarea?.setSelectionRange(cursor, cursor);
+		autosize();
+	}
+
+	async function closePicker() {
+		const at = picking?.at;
+		picking = null;
+		await tick();
+		textarea?.focus();
+		if (at !== undefined) textarea?.setSelectionRange(at, at);
 	}
 
 	function autosize() {
@@ -61,11 +107,16 @@
 		onfocus={() => ((editing = true), autosize())}
 		onblur={() => {
 			commit();
-			editing = false;
+			// Stay in edit mode while the picker has focus.
+			if (!picking) editing = false;
 		}}
 		rows="4"
 	></textarea>
-	<p class="hint ui muted">Markdown works. Link a sicha with <code>[[ls-15-7]]</code>. Saves as you type.</p>
+	<div class="hint ui muted">
+		<button class="btn small" onmousedown={(e) => e.preventDefault()} onclick={pickButton}>＋ Link a sicha</button>
+		<span>or type <code>[[</code> · Markdown works · saves as you type</span>
+		{#if copied}<span class="copied">Copied {copied}</span>{/if}
+	</div>
 {:else}
 	<!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
 	<div
@@ -76,7 +127,14 @@
 	>
 		{@html html}
 	</div>
-	<button class="btn edit" onclick={open}>Edit notes</button>
+	<div class="actions">
+		<button class="btn" onclick={open}>Edit notes</button>
+		<button class="btn" onclick={pickButton}>＋ Link a sicha</button>
+	</div>
+{/if}
+
+{#if picking}
+	<SichaPicker onpick={insert} onclose={closePicker} />
 {/if}
 
 <style>
@@ -96,8 +154,19 @@
 		border-color: var(--accent);
 	}
 	.hint {
-		margin: 6px 2px 0;
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 6px 10px;
+		margin: 8px 2px 0;
 		font-size: 12.5px;
+	}
+	.btn.small {
+		padding: 4px 10px;
+		font-size: 13px;
+	}
+	.copied {
+		color: var(--done);
 	}
 	.prose {
 		cursor: text;
@@ -121,7 +190,9 @@
 		margin: 1em 0 0.4em;
 		font-size: 1.15em;
 	}
-	.edit {
+	.actions {
+		display: flex;
+		gap: 8px;
 		margin-top: 4px;
 	}
 </style>

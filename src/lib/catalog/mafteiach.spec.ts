@@ -19,6 +19,19 @@ describe('parseLabel', () => {
 		expect(parseLabel(`ח"א ע' 15 (לך לך)`)).toEqual({ page: 15, title: 'לך לך', index: undefined, kind: 'sicha' });
 	});
 
+	it('handles nested parentheses and a trailing year', () => {
+		expect(parseLabel(`חכ"ח ע' 15 ((ערב) חה"ש)`).title).toBe('(ערב) חה"ש');
+		expect(parseLabel(`חל"ג ע' 156 (י"ז תמוז (נדחה))`).title).toBe('י"ז תמוז (נדחה)');
+		expect(parseLabel(`חכ"ג ע' 17 (חה"ש א) [תשמ"א]`)).toEqual({ page: 17, title: 'חה"ש א [תשמ"א]', index: 1, kind: 'sicha' });
+	});
+
+	it('recognises singular and misspelt additions', () => {
+		expect(parseLabel(`הוספה ב' - פתח דבר לקונטרסים (ח"ד ע' 1369)`)).toMatchObject({ title: `הוספה ב' - פתח דבר לקונטרסים`, kind: 'hosafa' });
+		expect(parseLabel(`הוספה - ליל ב' דחה"פ תשח"י (ח"ג ע' 1016)`)).toMatchObject({ title: `ליל ב' דחה"פ תשח"י`, kind: 'hosafa' });
+		expect(parseLabel(`הופסות - חג הפסח (חי"ז ע' 435)`)).toMatchObject({ title: 'חג הפסח', kind: 'hosafa' });
+		expect(parseLabel(`הוספות - הוספה למכתב בע' 564 (חי"ט ע' 620)`)).toMatchObject({ page: 620, title: `הוספה למכתב בע' 564` });
+	});
+
 	it('handles the flipped label on additions', () => {
 		expect(parseLabel(`הוספות - כסלו (חט"ו ע' 506)`)).toEqual({ page: 506, title: 'כסלו', index: undefined, kind: 'hosafa' });
 	});

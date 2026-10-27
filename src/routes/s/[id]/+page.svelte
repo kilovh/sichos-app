@@ -46,6 +46,15 @@
 		);
 	}
 
+	let copied = $state(false);
+	async function copyLink() {
+		try {
+			await navigator.clipboard.writeText(`[[${id}]]`);
+			copied = true;
+			setTimeout(() => (copied = false), 2000);
+		} catch {}
+	}
+
 	let newTag = $state('');
 	function addTag() {
 		const t = newTag.trim();
@@ -85,6 +94,9 @@
 			<p class="cite he">
 				ליקוטי שיחות {citation(sicha)}
 				{#if sicha.kind === 'hosafa'}<span class="chip ui" dir="ltr">addition</span>{/if}
+				<button class="copy ui" dir="ltr" onclick={copyLink} title="Copy a link to paste into any note">
+					{copied ? 'Copied' : `[[${id}]]`}
+				</button>
 			</p>
 		</header>
 
@@ -224,6 +236,20 @@
 		margin: 6px 0 0;
 		color: var(--muted);
 		font-size: 17px;
+	}
+	.copy {
+		margin-inline-start: 8px;
+		border: 1px dashed var(--line);
+		background: none;
+		border-radius: 6px;
+		padding: 1px 7px;
+		font-size: 12px;
+		color: var(--muted);
+		vertical-align: middle;
+	}
+	.copy:hover {
+		color: var(--accent);
+		border-color: var(--accent);
 	}
 	.status {
 		display: flex;
