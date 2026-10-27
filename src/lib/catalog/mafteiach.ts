@@ -47,9 +47,17 @@ export function parseLabel(label: string): { page?: number; title: string; index
 
 	const open = rest.indexOf('(');
 	const title = open >= 0 ? rest.slice(open + 1, rest.lastIndexOf(')')).trim() : rest;
-	const last = title.split(' ').at(-1)!;
-	const index = title.includes(' ') && last.length <= 2 ? hebrewNumeral(last) : undefined;
-	return { page, title: withYear(title), index, kind: 'sicha' };
+	return { page, title: withYear(title), index: sichaIndex(title), kind: 'sicha' };
+}
+
+/**
+ * The sicha's number within its parsha: a lone letter after the name — `נח ב`, `עקב א - כ"ף אב`,
+ * `פנחס א - תשמ״א`. Only a single letter counts, so a trailing word like `אב` (the month) isn't read as 3.
+ */
+export function sichaIndex(title: string): number | undefined {
+	const name = title.split(/\s+-\s+/)[0].trim();
+	const last = name.split(/\s+/).at(-1)!;
+	return name.includes(' ') && last.length === 1 ? hebrewNumeral(last) : undefined;
 }
 
 /**

@@ -74,8 +74,10 @@
 	</section>
 
 	<p class="ui muted credit">
-		Catalog of Likkutei Sichos — volumes, pages, summaries and links — courtesy of
-		<a href="https://mafteiach.app" target="_blank" rel="noopener">mafteiach.app</a>.
+		Catalog of Likkutei Sichos and Toras Menachem — volumes, pages, dates, summaries and links — courtesy of
+		<a href="https://mafteiach.app" target="_blank" rel="noopener">mafteiach.app</a>. Full texts on
+		<a href="https://chabadlibrary.org" target="_blank" rel="noopener">chabadlibrary.org</a>; shiurim on
+		<a href="https://projectlikkuteisichos.org" target="_blank" rel="noopener">Project Likkutei Sichos</a>.
 	</p>
 </main>
 

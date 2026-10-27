@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { parse } from 'node-html-parser';
-import { hebrewNumeral, parseLabel, parseSummary, parseVolumePage } from './mafteiach';
+import { hebrewNumeral, parseLabel, parseSummary, parseVolumePage, sichaIndex } from './mafteiach';
 
 describe('hebrewNumeral', () => {
 	it('reads plain and punctuated numerals', () => {
@@ -92,5 +92,19 @@ describe('parseSummary', () => {
 
 	it('drops the "see kitzur" placeholder', () => {
 		expect(parseSummary(parse('<div><div>ראה קיצור...</div></div>').firstChild as never, 'x')).toBeUndefined();
+	});
+});
+
+describe('sichaIndex', () => {
+	it('reads a lone letter after the name, even before a dash or a year', () => {
+		expect(sichaIndex('נח ב')).toBe(2);
+		expect(sichaIndex('עקב א - כ"ף אב')).toBe(1);
+		expect(sichaIndex('פנחס א - תשמ״א')).toBe(1);
+	});
+
+	it('ignores longer trailing words', () => {
+		expect(sichaIndex('ט"ו באב')).toBeUndefined();
+		expect(sichaIndex('כ"ף אב')).toBeUndefined();
+		expect(sichaIndex('נח')).toBeUndefined();
 	});
 });

@@ -5,7 +5,7 @@ export function normalize(s: string): string {
 	return s
 		.normalize('NFD')
 		.replace(/[֑-ׇ]/g, '')
-		.replace(/[״׳"'`]/g, '')
+		.replace(/[״׳"'`”“’‘]/g, '')
 		.replace(/[ךםןףץ]/g, (c) => FINALS[c])
 		.toLowerCase();
 }

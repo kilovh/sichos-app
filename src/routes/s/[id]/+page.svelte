@@ -108,6 +108,11 @@
 			{#if sicha.links.pdf}<a class="btn primary" href={sicha.links.pdf} target="_blank" rel="noopener">Open sicha ↗</a>{/if}
 			{#if sicha.links.translation}<a class="btn" href={sicha.links.translation} target="_blank" rel="noopener">Translation ↗</a>{/if}
 			{#if sicha.links.chabadlibrary}<a class="btn" href={sicha.links.chabadlibrary} target="_blank" rel="noopener">Chabad Library ↗</a>{/if}
+			{#if sicha.links.pls}
+				<a class="btn" href={sicha.links.pls} target="_blank" rel="noopener" title="Shiurim, audio, summaries and materials">
+					Project Likkutei Sichos{sicha.links.plsCount ? ` · ${sicha.links.plsCount}` : ''} ↗
+				</a>
+			{/if}
 			{#if sicha.links.mafteiach}<a class="btn" href={sicha.links.mafteiach} target="_blank" rel="noopener">Kitzur on Mafteiach ↗</a>{/if}
 		</div>
 

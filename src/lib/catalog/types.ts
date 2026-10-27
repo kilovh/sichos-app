@@ -18,6 +18,10 @@ export interface Sicha {
 		mafteiach?: string;
 		/** Full text on chabadlibrary.org (volumes 30–39 only). */
 		chabadlibrary?: string;
+		/** The sicha's hub on projectlikkuteisichos.org: shiurim, audio, summaries in several languages. */
+		pls?: string;
+		/** How many resources that hub lists. */
+		plsCount?: number;
 	};
 }
 

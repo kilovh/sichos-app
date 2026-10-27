@@ -23,7 +23,8 @@ Built once by scripts that fetch politely (one request at a time, cached in `.ca
 
 ```sh
 npm run catalog:chabadlibrary  # maps LS volumes 30–39 to their full-text pages on chabadlibrary.org
-npm run catalog                # ../notes/catalog/ls.json — Likkutei Sichos, from mafteiach.app (+ the map above)
+npm run catalog:pls            # maps sichos to their hub pages (shiurim, audio) on projectlikkuteisichos.org
+npm run catalog                # ../notes/catalog/ls.json — Likkutei Sichos, from mafteiach.app (+ the maps above)
 npm run catalog:tm             # ../notes/catalog/tm.json — the Toras Menachem calendar, from mafteiach.app
 ```
 
