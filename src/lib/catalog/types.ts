@@ -40,3 +40,18 @@ export interface Farbrengen {
 	/** mafteiach's page for it: sources, PDF, summary. */
 	url: string;
 }
+
+/** A letter in the Rebbe's Igros Kodesh, as chabadlibrary.org has it. */
+export interface Letter {
+	/** `ig-{volume}-{letter number}`, e.g. `ig-3-543`. Notes files are named after it. */
+	id: string;
+	vol: number;
+	/** The letter's number in the series. */
+	num: number;
+	/** The number as printed, e.g. `תקמג`. */
+	numLabel: string;
+	/** A titled group the letter sits in, if not the main sequence. */
+	section?: string;
+	/** Full text on chabadlibrary.org. */
+	url: string;
+}

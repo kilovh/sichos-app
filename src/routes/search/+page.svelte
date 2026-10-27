@@ -9,13 +9,13 @@
 	let filter = $state<'all' | 'learned' | 'unlearned' | 'noted'>('all');
 
 	// Rebuilt when notes change; ~2k small documents, so this stays fast.
-	const search = $derived(buildIndex(store.catalog, store.notes, store.tm));
+	const search = $derived(buildIndex(store.catalog, store.notes, store.tm, store.igros));
 	const hits = $derived.by(() => {
 		if (q.trim().length < 2) return [];
 		return search(q)
 			.filter((h) => {
 				if (h.type === 'note') return filter === 'all' || filter === 'noted';
-				const n = store.notes[`${h.type === 'tm' ? 'tm' : 'ls'}/${h.ref}.md`];
+				const n = store.notes[`${h.type === 'sicha' ? 'ls' : h.type}/${h.ref}.md`];
 				if (filter === 'learned') return n?.status === 'learned';
 				if (filter === 'unlearned') return n?.status !== 'learned';
 				if (filter === 'noted') return Boolean(n?.body.trim());
@@ -43,6 +43,14 @@
 			{:else if h.type === 'tm'}
 				{@const f = store.tmById.get(h.ref)}
 				{#if f}<TmRow entry={f} showYear />{/if}
+			{:else if h.type === 'ig'}
+				{@const l = store.label(h.ref)}
+				{#if l}
+					<a class="note he" href={l.href} dir="rtl">
+						<span class="title">{l.title} · {l.cite}</span>
+						<span class="excerpt muted" dir="auto">{store.notes[`ig/${h.ref}.md`]?.body.slice(0, 160)}</span>
+					</a>
+				{/if}
 			{:else}
 				{@const n = store.notes[h.ref]}
 				<a class="note" href={resolve('/notes/[...path]', { path: h.ref.replace(/\.md$/, '') })}>

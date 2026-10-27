@@ -6,14 +6,25 @@ const MAFTEIACH = 'https://mafteiach.app';
 
 const HEB_NUM: Record<string, number> = {
 	א: 1, ב: 2, ג: 3, ד: 4, ה: 5, ו: 6, ז: 7, ח: 8, ט: 9, י: 10,
-	כ: 20, ל: 30, מ: 40, נ: 50, ס: 60, ע: 70, פ: 80, צ: 90, ק: 100
+	כ: 20, ל: 30, מ: 40, נ: 50, ס: 60, ע: 70, פ: 80, צ: 90, ק: 100, ר: 200, ש: 300, ת: 400,
+	ך: 20, ם: 40, ן: 50, ף: 80, ץ: 90
 };
 
-/** "יא" → 11, "טו" → 15. Returns undefined for anything that isn't a plain Hebrew numeral. */
+const sum = (letters: string) =>
+	letters && [...letters].every((c) => c in HEB_NUM) ? [...letters].reduce((n, c) => n + HEB_NUM[c], 0) : undefined;
+
+/**
+ * "יא" → 11, `ל"ט` → 39, `תתקמ"ג` → 943, and thousands marked by a geresh: `ג'תתקמ"ג` → 3943.
+ * Past ten thousand the mark is י׳: `י'קצ` → 10190. A lone letter with a geresh (`א'`) is just 1. Returns undefined for anything that isn't a Hebrew numeral.
+ */
 export function hebrewNumeral(s: string): number | undefined {
-	const letters = s.replace(/["'״׳]/g, '');
-	if (!letters || [...letters].some((c) => !(c in HEB_NUM))) return undefined;
-	return [...letters].reduce((n, c) => n + HEB_NUM[c], 0);
+	const t = s.trim().replace(/["״”]/g, '');
+	const thousands = t.match(/^([א-ת]{1,2})['׳’](.+)$/);
+	if (thousands) {
+		const [k, rest] = [sum(thousands[1]), sum(thousands[2].replace(/['׳’]/g, ''))];
+		return k === undefined || rest === undefined ? undefined : k * 1000 + rest;
+	}
+	return sum(t.replace(/['׳’]/g, ''));
 }
 
 // Volume indexes and the list of printings: listed like sichos on mafteiach, but not something you learn.

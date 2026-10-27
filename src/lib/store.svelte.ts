@@ -3,7 +3,7 @@
 import { get, set } from 'idb-keyval';
 import { dev } from '$app/env';
 import { resolve } from '$app/paths';
-import type { Farbrengen, Sicha } from './catalog/types';
+import type { Farbrengen, Letter, Sicha } from './catalog/types';
 import { citation } from './format';
 import { hebrewNumeral } from './hebrew';
 import { ConflictError, GitHubBackend, LocalBackend, type Backend, type GitHubConfig } from './notes/backend';
@@ -11,8 +11,10 @@ import { emptyNote, mergeNotes, parseNote, references, serializeNote, type Note 
 
 const CATALOG = 'catalog/ls.json';
 const CATALOG_TM = 'catalog/tm.json';
+const CATALOG_IG = 'catalog/igros.json';
+const CATALOGS = [CATALOG, CATALOG_TM, CATALOG_IG];
 /** Files that are notes; anything else in the repo (README, workflows) is ignored. */
-const NOTE_PATH = /^(ls|tm|thoughts|log)\/[^/]+\.md$/;
+const NOTE_PATH = /^(ls|tm|ig|thoughts|log)\/[^/]+\.md$/;
 const CONFIG_KEY = 'sichos.github';
 
 interface Cached {
@@ -32,7 +34,10 @@ export type SyncState = 'idle' | 'syncing' | 'offline' | 'error' | 'unconfigured
 export const today = () => new Date().toLocaleDateString('sv');
 /** `ls-15-7` → `ls/ls-15-7.md`, `tm-5720-01-16b` → `tm/tm-5720-01-16b.md`. */
 export const notePath = (id: string) => `${id.split('-')[0]}/${id}.md`;
-export const idOf = (path: string) => path.match(/^(?:ls|tm)\/(.+)\.md$/)?.[1];
+export const idOf = (path: string) => path.match(/^(?:ls|tm|ig)\/(.+)\.md$/)?.[1];
+
+/** `אג"ק ח"ג` */
+export const igCite = (l: Letter) => `אג"ק ח${hebrewNumeral(l.vol).replace(/['"]/g, '').replace(/(.)$/, '"$1')}`;
 
 /** `ט"ז תשרי תש"כ`; day 0 means mafteiach doesn't know the day. */
 export const tmDate = (f: Farbrengen) => `${f.day ? `${hebrewNumeral(f.day)} ` : ''}${f.month} ${f.yearLabel}`;
@@ -63,6 +68,7 @@ function readConfig(): GitHubConfig | null {
 class Store {
 	catalog = $state.raw<Sicha[]>([]);
 	tm = $state.raw<Farbrengen[]>([]);
+	igros = $state.raw<Letter[]>([]);
 	notes = $state.raw<Record<string, Note>>({});
 	syncState = $state<SyncState>('idle');
 	syncMessage = $state('');
@@ -72,6 +78,12 @@ class Store {
 
 	byId = $derived(new Map(this.catalog.map((s) => [s.id, s])));
 	tmById = $derived(new Map(this.tm.map((f) => [f.id, f])));
+	igById = $derived(new Map(this.igros.map((l) => [l.id, l])));
+	igVolumes = $derived.by(() => {
+		const vols = new Map<number, Letter[]>();
+		for (const l of this.igros) vols.set(l.vol, [...(vols.get(l.vol) ?? []), l]);
+		return vols;
+	});
 	tmYears = $derived.by(() => {
 		const years = new Map<number, Farbrengen[]>();
 		for (const f of this.tm) years.set(f.year, [...(years.get(f.year) ?? []), f]);
@@ -152,6 +164,12 @@ class Store {
 				this.tm = JSON.parse(tm.text);
 			} catch {}
 		}
+		const igros = this.cache[CATALOG_IG];
+		if (igros) {
+			try {
+				this.igros = JSON.parse(igros.text);
+			} catch {}
+		}
 		const notes: Record<string, Note> = {};
 		for (const [path, { text }] of Object.entries(this.cache)) {
 			if (NOTE_PATH.test(path)) notes[path] = parseNote(path, text);
@@ -168,7 +186,7 @@ class Store {
 			await this.flush();
 			const tree = await this.backend.tree();
 			const wanted = [...tree].filter(
-				([p, sha]) => (p === CATALOG || p === CATALOG_TM || NOTE_PATH.test(p)) && this.cache[p]?.sha !== sha
+				([p, sha]) => (CATALOGS.includes(p) || NOTE_PATH.test(p)) && this.cache[p]?.sha !== sha
 			);
 			for (let i = 0; i < wanted.length; i += 8) {
 				await Promise.all(
@@ -272,6 +290,8 @@ class Store {
 		if (s) return { title: s.title, cite: citation(s), href: resolve('/s/[id]', { id }) };
 		const f = this.tmById.get(id);
 		if (f) return { title: f.title, cite: tmDate(f), href: resolve('/t/[id]', { id }) };
+		const l = this.igById.get(id);
+		if (l) return { title: `אגרת ${l.numLabel}`, cite: igCite(l), href: resolve('/l/[id]', { id }) };
 	}
 
 	/** Same, for a note file — the thing it's about, or its own title. */

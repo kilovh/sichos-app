@@ -63,10 +63,10 @@
 	</section>
 
 	<section>
-		<h1 class="eyebrow">Igros & other sources</h1>
+		<h1 class="eyebrow">Other sources</h1>
 		<p class="ui muted lead">
-			Toras Menachem has its own calendar under <a href={resolve('/tm')}>Browse → Toras Menachem</a>; use this for
-			Igros Kodesh, or for anything that isn't there.
+			Toras Menachem and Igros Kodesh have their own indexes under <a href={resolve('/tm')}>Toras Menachem</a> and
+			<a href={resolve('/igros')}>Igros</a>; use this for anything that isn't there.
 		</p>
 		<form class="source card ui" onsubmit={logSource}>
 			<select bind:value={src.work}>

@@ -1,11 +1,11 @@
 import MiniSearch from 'minisearch';
-import type { Farbrengen, Sicha } from './catalog/types';
+import type { Farbrengen, Letter, Sicha } from './catalog/types';
 import { normalize } from './hebrew';
 import type { Note } from './notes/note';
 
 export interface Hit {
 	id: string;
-	type: 'sicha' | 'tm' | 'note';
+	type: 'sicha' | 'tm' | 'ig' | 'note';
 	/** For a sicha or TM entry: its id. For a note: its path. */
 	ref: string;
 	score: number;
@@ -30,7 +30,12 @@ export function indexTerms(t: string): string[] | null {
  * One searchable document per catalog entry — sicha or TM entry, with its notes folded in — and one per
  * free-standing note.
  */
-export function buildIndex(catalog: Sicha[], notes: Record<string, Note>, tm: Farbrengen[] = []) {
+export function buildIndex(
+	catalog: Sicha[],
+	notes: Record<string, Note>,
+	tm: Farbrengen[] = [],
+	igros: Letter[] = []
+) {
 	const index = new MiniSearch({
 		fields: ['title', 'groups', 'summary', 'body', 'tags'],
 		storeFields: ['type', 'ref'],
@@ -70,8 +75,21 @@ export function buildIndex(catalog: Sicha[], notes: Record<string, Note>, tm: Fa
 			tags: n ? [...n.tags, ...n.auto_tags].join(' ') : ''
 		});
 	}
+	for (const l of igros) {
+		const n = notes[`ig/${l.id}.md`];
+		docs.push({
+			id: l.id,
+			type: 'ig',
+			ref: l.id,
+			title: `אגרת ${l.numLabel} ${l.num}`,
+			groups: 'אגרות קודש',
+			summary: '',
+			body: n?.body ?? '',
+			tags: n ? [...n.tags, ...n.auto_tags].join(' ') : ''
+		});
+	}
 	for (const [path, n] of Object.entries(notes)) {
-		if (path.startsWith('ls/') || path.startsWith('tm/')) continue;
+		if (/^(ls|tm|ig)\//.test(path)) continue;
 		docs.push({
 			id: path,
 			type: 'note',

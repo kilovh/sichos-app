@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { tick } from 'svelte';
-	import type { Farbrengen, Sicha } from '#lib/catalog/types.ts';
+	import type { Farbrengen, Letter, Sicha } from '#lib/catalog/types.ts';
 	import { renderMarkdown } from '#lib/markdown.ts';
 	import type { Note } from '#lib/notes/note.ts';
 	import { store } from '#lib/store.svelte.ts';
@@ -48,7 +48,7 @@
 		picking = { at };
 	}
 
-	async function insert(s: Sicha | Farbrengen) {
+	async function insert(s: Sicha | Farbrengen | Letter) {
 		if (!picking) return;
 		const link = `[[${s.id}]]`;
 		const { from = picking.at, at } = picking;
@@ -110,7 +110,7 @@
 		rows="4"
 	></textarea>
 	<div class="hint ui muted">
-		<button class="btn small" onmousedown={(e) => e.preventDefault()} onclick={pickButton}>＋ Link a sicha</button>
+		<button class="btn small" onmousedown={(e) => e.preventDefault()} onclick={pickButton}>＋ Link a source</button>
 		<span>or type <code>[[</code> · Markdown works · saves as you type</span>
 		{#if copied}<span class="copied">Copied {copied}</span>{/if}
 	</div>
@@ -126,7 +126,7 @@
 	</div>
 	<div class="actions">
 		<button class="btn" onclick={open}>Edit notes</button>
-		<button class="btn" onclick={pickButton}>＋ Link a sicha</button>
+		<button class="btn" onclick={pickButton}>＋ Link a source</button>
 	</div>
 {/if}
 

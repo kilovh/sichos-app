@@ -2,6 +2,7 @@
 	import { resolve } from '$app/paths';
 	import { SEFARIM } from '#lib/catalog/parshiyos.ts';
 	import { byOtherHeading, byParsha } from '#lib/catalog/views.ts';
+	import IgVolumes from '#lib/components/IgVolumes.svelte';
 	import TmYears from '#lib/components/TmYears.svelte';
 	import VolumeGrid from '#lib/components/VolumeGrid.svelte';
 	import { store } from '#lib/store.svelte.ts';
@@ -45,6 +46,14 @@
 			<a class="ui muted" href={resolve('/tm')}>Favorites →</a>
 		</div>
 		<TmYears />
+	</section>
+
+	<section>
+		<div class="head">
+			<h1 class="eyebrow">Igros Kodesh · by volume</h1>
+			<a class="ui muted" href={resolve('/igros')}>Find a letter →</a>
+		</div>
+		<IgVolumes />
 	</section>
 
 	<section>

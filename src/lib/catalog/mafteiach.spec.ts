@@ -9,6 +9,11 @@ describe('hebrewNumeral', () => {
 		expect(hebrewNumeral('ל"ט')).toBe(39);
 		expect(hebrewNumeral('נח')).toBe(58);
 		expect(hebrewNumeral('abc')).toBeUndefined();
+		expect(hebrewNumeral(`תתקמ"ג`)).toBe(943);
+		expect(hebrewNumeral(`ג'תתקמ"ג`)).toBe(3943);
+		expect(hebrewNumeral(`א'`)).toBe(1);
+		expect(hebrewNumeral(`י'קצ`)).toBe(10190);
+		expect(hebrewNumeral(`י'א`)).toBe(10001);
 	});
 });
 

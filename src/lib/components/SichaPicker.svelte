@@ -1,21 +1,23 @@
 <script lang="ts">
-	import type { Farbrengen, Sicha } from '#lib/catalog/types.ts';
+	import { hebrewNumeral as readNumeral } from '#lib/catalog/mafteiach.ts';
+	import type { Farbrengen, Letter, Sicha } from '#lib/catalog/types.ts';
 	import { citation, volLabel } from '#lib/format.ts';
 	import { hebrewNumeral, normalize } from '#lib/hebrew.ts';
 	import { buildIndex } from '#lib/search.ts';
-	import { store, tmDate } from '#lib/store.svelte.ts';
+	import { igCite, store, tmDate } from '#lib/store.svelte.ts';
 
-	let { onpick, onclose }: { onpick: (entry: Sicha | Farbrengen) => void; onclose: () => void } = $props();
+	type Entry = Sicha | Farbrengen | Letter;
+	let { onpick, onclose }: { onpick: (entry: Entry) => void; onclose: () => void } = $props();
 
 	interface Item {
-		entry: Sicha | Farbrengen;
+		entry: Entry;
 		title: string;
 		cite: string;
 		summary?: string;
 		heading?: string;
 	}
 
-	let scope = $state<'ls' | 'tm'>('ls');
+	let scope = $state<'ls' | 'tm' | 'ig'>('ls');
 	let q = $state('');
 	/** Selected volume (LS) or year (TM). */
 	let group = $state<number>();
@@ -29,6 +31,7 @@
 
 	const lsItem = (s: Sicha): Item => ({ entry: s, title: s.title, cite: citation(s), summary: s.summary, heading: s.groups[0] });
 	const tmItem = (f: Farbrengen): Item => ({ entry: f, title: f.title, cite: tmDate(f), heading: f.month });
+	const igItem = (l: Letter): Item => ({ entry: l, title: `אגרת ${l.numLabel}`, cite: `${igCite(l)} · ${l.num}` });
 
 	/** "15 34", "15:34", "15/34" → the sicha in volume 15 that page 34 falls in. */
 	function byAddress(query: string): Sicha[] {
@@ -63,6 +66,12 @@
 			const found = ranked(lsSearch(query), store.byId, (s) => s.vol).filter((s) => !group || s.vol === group);
 			return [...direct, ...found.filter((s) => !direct.includes(s))].slice(0, 40).map(lsItem);
 		}
+		if (scope === 'ig') {
+			// Letters are found by number, Arabic or Hebrew; a volume chip lists its letters.
+			const num = /^\d+$/.test(query) ? Number(query) : query ? readNumeral(query) : undefined;
+			if (num) return store.igros.filter((l) => l.num === num).map(igItem);
+			return group ? (store.igVolumes.get(group) ?? []).map(igItem) : [];
+		}
 		if (!query) return group ? (store.tmYears.get(group) ?? []).map(tmItem) : [];
 		return ranked(tmSearch(query), store.tmById, (f) => f.year)
 			.filter((f) => !group || f.year === group)
@@ -73,7 +82,9 @@
 	const groups = $derived(
 		scope === 'ls'
 			? [...store.volumes.keys()].map((v) => ({ key: v, label: hebrewNumeral(v) }))
-			: [...store.tmYears].map(([y, e]) => ({ key: y, label: e[0].yearLabel }))
+			: scope === 'ig'
+				? [...store.igVolumes.keys()].map((v) => ({ key: v, label: hebrewNumeral(v) }))
+				: [...store.tmYears].map(([y, e]) => ({ key: y, label: e[0].yearLabel }))
 	);
 	const browsing = $derived(!q.trim() && group !== undefined);
 
@@ -115,13 +126,18 @@
 	<div class="scopes" dir="rtl">
 		<button class:on={scope === 'ls'} onclick={() => setScope('ls')}>ליקוטי שיחות</button>
 		<button class:on={scope === 'tm'} onclick={() => setScope('tm')}>תורת מנחם</button>
+		<button class:on={scope === 'ig'} onclick={() => setScope('ig')}>אגרות קודש</button>
 	</div>
 	<input
 		bind:this={input}
 		bind:value={q}
 		class="q"
 		dir="auto"
-		placeholder={scope === 'ls' ? 'Search, or volume and page: 15 34' : 'Search an occasion: פורים, י"ט כסלו…'}
+		placeholder={scope === 'ls'
+			? 'Search, or volume and page: 15 34'
+			: scope === 'ig'
+				? 'Letter number: 543 or תקמג'
+				: 'Search an occasion: פורים, י"ט כסלו…'}
 		autocomplete="off"
 		spellcheck="false"
 	/>
@@ -155,7 +171,7 @@
 			</button>
 		{:else}
 			<p class="empty ui muted">
-				{q.trim() ? 'No match.' : `Type to search, or pick a ${scope === 'ls' ? 'volume' : 'year'} above.`}
+				{q.trim() ? 'No match.' : `Type to search, or pick a ${scope === 'tm' ? 'year' : 'volume'} above.`}
 			</p>
 		{/each}
 	</div>

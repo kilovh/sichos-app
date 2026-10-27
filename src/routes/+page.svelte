@@ -21,6 +21,7 @@
 
 	const recent = $derived(store.recent(6));
 	const tmStars = $derived(store.tm.filter((f) => store.isFavorite(f.id)).length);
+	const igStars = $derived(store.igros.filter((l) => store.isFavorite(l.id)).length);
 </script>
 
 <main class="page">
@@ -72,6 +73,13 @@
 			<a class="more ui" href={resolve('/tm')}>{tmStars ? `${tmStars} favorites →` : 'Browse by year →'}</a>
 		</div>
 		<TmYears />
+	</section>
+
+	<section>
+		<div class="head">
+			<h2 class="eyebrow">Igros Kodesh</h2>
+			<a class="more ui" href={resolve('/igros')}>{igStars ? `${igStars} favorites →` : 'Find a letter →'}</a>
+		</div>
 	</section>
 </main>
 

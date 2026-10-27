@@ -15,7 +15,8 @@
 		"catalog": "node scripts/build-catalog.ts",
 		"catalog:tm": "node scripts/build-tm.ts",
 		"catalog:chabadlibrary": "node scripts/build-chabadlibrary.ts",
-		"catalog:pls": "node scripts/build-pls.ts"
+		"catalog:pls": "node scripts/build-pls.ts",
+		"catalog:igros": "node scripts/build-igros.ts"
 	},
 	"devDependencies": {
 		"@sveltejs/adapter-static": "^4.0.0",

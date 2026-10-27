@@ -2,22 +2,19 @@
 	import { page } from '$app/state';
 	import { resolve } from '$app/paths';
 	import Check from '#lib/components/Check.svelte';
-	import NoteEditor from '#lib/components/NoteEditor.svelte';
+	import EntryNotes from '#lib/components/EntryNotes.svelte';
 	import Star from '#lib/components/Star.svelte';
 	import { prettyDate } from '#lib/format.ts';
-	import type { Note } from '#lib/notes/note.ts';
 	import { store, tmDate } from '#lib/store.svelte.ts';
 
 	const id = $derived(page.params.id ?? '');
 	const entry = $derived(store.tmById.get(id));
 	const note = $derived(store.note(id));
-	const mentions = $derived(store.backlinks.get(id) ?? []);
 
 	const index = $derived(store.tm.findIndex((f) => f.id === id));
 	const prev = $derived(store.tm[index - 1]);
 	const next = $derived(store.tm[index + 1]);
 
-	const save = (patch: Partial<Note>, message: string) => store.save({ ...note, ...patch }, message);
 
 	let copied = $state(false);
 	async function copyLink() {
@@ -28,12 +25,6 @@
 		} catch {}
 	}
 
-	let newTag = $state('');
-	function addTag() {
-		const t = newTag.trim();
-		if (t && !note.tags.includes(t)) save({ tags: [...note.tags, t] }, `tag ${id}`);
-		newTag = '';
-	}
 </script>
 
 {#if !entry}
@@ -74,40 +65,7 @@
 			<a class="btn primary" href={entry.url} target="_blank" rel="noopener">Sources & summary on Mafteiach ↗</a>
 		</div>
 
-		<section>
-			<h2 class="eyebrow">Notes</h2>
-			<NoteEditor {note} onsave={(body) => save({ body }, `note on ${id}`)} />
-		</section>
-
-		<section>
-			<h2 class="eyebrow">Tags</h2>
-			<div class="tags">
-				{#each note.tags as t (t)}
-					<span class="chip">
-						<span dir="auto">{t}</span>
-						<button class="remove" aria-label="Remove tag {t}" onclick={() => save({ tags: note.tags.filter((x) => x !== t) }, `untag ${id}`)}>×</button>
-					</span>
-				{/each}
-				{#each note.auto_tags.filter((t) => !note.tags.includes(t)) as t (t)}
-					<span class="chip auto" title="Added automatically"><span dir="auto">{t}</span></span>
-				{/each}
-				<form class="ui" onsubmit={(e) => (e.preventDefault(), addTag())}>
-					<input bind:value={newTag} placeholder="+ tag" dir="auto" size="8" />
-				</form>
-			</div>
-		</section>
-
-		{#if mentions.length}
-			<section>
-				<h2 class="eyebrow">Mentioned in</h2>
-				<ul class="mentions">
-					{#each mentions as path (path)}
-						{@const l = store.labelOfPath(path)}
-						<li><a href={l.href} class="he" dir="auto">{l.title}{l.cite ? ` · ${l.cite}` : ''}</a></li>
-					{/each}
-				</ul>
-			</section>
-		{/if}
+		<EntryNotes {id} />
 
 		<nav class="pager ui he" dir="rtl">
 			{#if prev}<a href={resolve('/t/[id]', { id: prev.id })}>→ {prev.title}</a>{:else}<span></span>{/if}
@@ -160,37 +118,6 @@
 	}
 	.links {
 		margin-bottom: 24px;
-	}
-	section {
-		margin-bottom: 28px;
-	}
-	h2.eyebrow {
-		margin: 0 0 8px;
-	}
-	.tags {
-		display: flex;
-		flex-wrap: wrap;
-		align-items: baseline;
-		gap: 6px 18px;
-	}
-	.tags input {
-		width: 9em;
-		font-size: 15px;
-	}
-	.remove {
-		border: 0;
-		background: none;
-		padding: 0 2px;
-		color: var(--faint);
-		font-size: 15px;
-		line-height: 1;
-	}
-	.mentions {
-		margin: 0;
-		padding-inline-start: 18px;
-	}
-	.mentions a {
-		color: var(--accent);
 	}
 	.pager {
 		display: flex;
