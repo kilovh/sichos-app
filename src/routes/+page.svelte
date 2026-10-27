@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
 	import SichaRow from '#lib/components/SichaRow.svelte';
+	import TmYears from '#lib/components/TmYears.svelte';
 	import VolumeGrid from '#lib/components/VolumeGrid.svelte';
 	import { prettyDate } from '#lib/format.ts';
 	import { store } from '#lib/store.svelte.ts';
@@ -23,14 +24,14 @@
 </script>
 
 <main class="page">
-	<section class="hero">
-		<p class="eyebrow">Likkutei Sichos</p>
-		<h1>
-			<span class="big">{all.done}</span>
-			<span class="muted">of {all.total.toLocaleString()} sichos learned</span>
-		</h1>
+	<header class="hero">
+		<p class="kicker he">ליקוטי שיחות</p>
+		<p class="count">
+			<span class="big">{all.done.toLocaleString()}</span>
+			<span class="of">of {all.total.toLocaleString()} sichos learned</span>
+		</p>
 		<div class="bar"><span style:width="{(100 * all.done) / (all.total || 1)}%"></span></div>
-	</section>
+	</header>
 
 	{#if next}
 		<section>
@@ -46,8 +47,8 @@
 				{#each recent as n (n.path)}
 					{@const t = store.labelOfPath(n.path)}
 					<li>
-						<a href={t.href}>
-							<span class="he" dir="auto">{t.title}</span>
+						<a href={t.href} dir="auto">
+							<span class="he">{t.title}</span>
 							{#if t.cite}<span class="he muted cite">{t.cite}</span>{/if}
 						</a>
 						{#if n.learned.length}<span class="ui muted">{prettyDate(n.learned.at(-1)!)}</span>{/if}
@@ -60,7 +61,7 @@
 	<section>
 		<div class="head">
 			<h2 class="eyebrow">Volumes</h2>
-			<a class="ui muted" href={resolve('/browse')}>By parsha & moed →</a>
+			<a class="more ui" href={resolve('/browse')}>By parsha & moed →</a>
 		</div>
 		<VolumeGrid />
 	</section>
@@ -68,47 +69,68 @@
 	<section>
 		<div class="head">
 			<h2 class="eyebrow">Toras Menachem</h2>
-			<a class="ui muted" href={resolve('/tm')}>{tmStars ? `${tmStars} favorites →` : 'Browse by year →'}</a>
+			<a class="more ui" href={resolve('/tm')}>{tmStars ? `${tmStars} favorites →` : 'Browse by year →'}</a>
 		</div>
+		<TmYears />
 	</section>
 </main>
 
 <style>
-	section {
-		margin-bottom: 36px;
+	.hero {
+		margin: 8px 0 44px;
 	}
-	.hero h1 {
+	.kicker {
+		margin: 0 0 6px;
+		font-size: 17px;
+		color: var(--muted);
+	}
+	.count {
 		display: flex;
 		align-items: baseline;
-		gap: 10px;
 		flex-wrap: wrap;
-		margin: 6px 0 14px;
-		font-size: 22px;
+		gap: 4px 14px;
+		margin: 0 0 18px;
 	}
 	.big {
-		font-size: 56px;
-		line-height: 1;
+		font-size: 88px;
+		line-height: 0.9;
 		font-weight: 400;
+		font-variant-numeric: lining-nums;
+		letter-spacing: -0.03em;
+		color: var(--red);
 	}
-	.hero .bar {
-		height: 6px;
+	.of {
+		font-size: 22px;
+		font-style: italic;
+		color: var(--muted);
+	}
+	section {
+		margin-bottom: 44px;
 	}
 	h2.eyebrow {
-		margin-bottom: 8px;
+		margin-bottom: 10px;
 	}
 	.head {
 		display: flex;
 		justify-content: space-between;
 		align-items: baseline;
-		margin-bottom: 8px;
+		margin-bottom: 10px;
 	}
 	.head h2 {
 		margin: 0;
+	}
+	.more {
+		color: var(--muted);
+		font-style: italic;
+	}
+	.more:hover {
+		color: var(--red);
 	}
 	.recent {
 		list-style: none;
 		margin: 0;
 		padding: 0;
+		border-top: 1px solid var(--line);
 	}
 	.recent li {
 		display: flex;
@@ -122,12 +144,12 @@
 		display: flex;
 		gap: 10px;
 		align-items: baseline;
-		font-size: 18px;
+		font-size: 19px;
 	}
 	.recent a:hover {
-		color: var(--accent);
+		color: var(--red);
 	}
 	.cite {
-		font-size: 14px;
+		font-size: 15px;
 	}
 </style>

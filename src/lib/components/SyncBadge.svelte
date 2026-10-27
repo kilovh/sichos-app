@@ -23,16 +23,15 @@
 		display: inline-flex;
 		align-items: center;
 		gap: 6px;
-		color: var(--muted);
+		color: var(--faint);
 		font-size: 12.5px;
+		font-style: italic;
 		white-space: nowrap;
 	}
 	.dot {
-		width: 7px;
-		height: 7px;
-		border-radius: 50%;
-		background: var(--done);
-		opacity: 0.7;
+		width: 5px;
+		height: 5px;
+		background: var(--muted);
 	}
 	.syncing .dot {
 		animation: pulse 1s ease-in-out infinite alternate;

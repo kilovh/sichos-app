@@ -144,18 +144,16 @@
 		font-size: 17px;
 	}
 	.copy {
-		margin-inline-start: 8px;
-		border: 1px dashed var(--line);
+		margin-inline-start: 10px;
+		border: 0;
 		background: none;
-		border-radius: 6px;
-		padding: 1px 7px;
-		font-size: 12px;
-		color: var(--muted);
-		vertical-align: middle;
+		padding: 0;
+		font-size: 13px;
+		font-style: italic;
+		color: var(--faint);
 	}
 	.copy:hover {
-		color: var(--accent);
-		border-color: var(--accent);
+		color: var(--red);
 	}
 	.status {
 		margin: 16px 0 12px;
@@ -172,19 +170,12 @@
 	.tags {
 		display: flex;
 		flex-wrap: wrap;
-		align-items: center;
-		gap: 6px;
+		align-items: baseline;
+		gap: 6px 18px;
 	}
 	.tags input {
-		border: 1px dashed var(--line);
-		background: var(--surface);
-		padding: 2px 10px;
-		border-radius: 999px;
-		font-size: 12.5px;
-	}
-	.tags input:focus {
-		outline: none;
-		border-color: var(--accent);
+		width: 9em;
+		font-size: 15px;
 	}
 	.remove {
 		border: 0;

@@ -7,30 +7,36 @@
 	{#each [...store.tmYears] as [year, entries] (year)}
 		{@const stars = entries.filter((e) => store.isFavorite(e.id)).length}
 		{@const done = entries.filter((e) => store.isLearned(e.id)).length}
-		<a class="year card" href={resolve('/tm/[year]', { year: String(year) })}>
+		<a class="cell" href={resolve('/tm/[year]', { year: String(year) })} title="{entries.length} entries">
 			<span class="label">{entries[0].yearLabel}</span>
 			<span class="meta ui" dir="ltr">
-				{entries.length}
-				{#if done}<span class="done">· {done} ✓</span>{/if}
-				{#if stars}<span class="stars">· {stars} ★</span>{/if}
+				{entries.length}{#if done}<span class="done"> · {done}✓</span>{/if}{#if stars}<span class="stars"> · {stars}★</span>{/if}
 			</span>
 		</a>
 	{/each}
 </div>
 
 <style>
+	/* Each cell draws its own hairline (the shadows meet in the 1px gaps), so a short last row ends cleanly. */
 	.grid {
 		display: grid;
-		grid-template-columns: repeat(auto-fill, minmax(92px, 1fr));
-		gap: 8px;
+		grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+		gap: 1px;
+		padding: 1px;
 	}
-	.year {
+	.cell {
+		box-shadow: 0 0 0 1px var(--line);
 		display: grid;
-		gap: 4px;
-		padding: 10px 10px 8px;
+		place-items: center;
+		align-content: center;
+		gap: 2px;
+		padding: 9px 4px 7px;
+		background: var(--bg);
 	}
-	.year:hover {
-		border-color: var(--faint);
+	.cell:hover {
+		outline: 1px solid var(--ink);
+		outline-offset: -1px;
+		z-index: 1;
 	}
 	.label {
 		font-size: 20px;
@@ -39,13 +45,12 @@
 	}
 	.meta {
 		font-size: 11.5px;
-		color: var(--muted);
-		text-align: right;
+		color: var(--faint);
 	}
 	.done {
-		color: var(--done);
+		color: var(--ink);
 	}
 	.stars {
-		color: var(--warn);
+		color: var(--gold);
 	}
 </style>

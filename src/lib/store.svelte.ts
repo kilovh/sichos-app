@@ -11,6 +11,8 @@ import { emptyNote, mergeNotes, parseNote, references, serializeNote, type Note 
 
 const CATALOG = 'catalog/ls.json';
 const CATALOG_TM = 'catalog/tm.json';
+/** Files that are notes; anything else in the repo (README, workflows) is ignored. */
+const NOTE_PATH = /^(ls|tm|thoughts|log)\/[^/]+\.md$/;
 const CONFIG_KEY = 'sichos.github';
 
 interface Cached {
@@ -152,7 +154,7 @@ class Store {
 		}
 		const notes: Record<string, Note> = {};
 		for (const [path, { text }] of Object.entries(this.cache)) {
-			if (path.endsWith('.md') && !path.startsWith('.')) notes[path] = parseNote(path, text);
+			if (NOTE_PATH.test(path)) notes[path] = parseNote(path, text);
 		}
 		for (const p of this.queue) notes[p.path] = parseNote(p.path, p.text);
 		this.notes = notes;
@@ -166,7 +168,7 @@ class Store {
 			await this.flush();
 			const tree = await this.backend.tree();
 			const wanted = [...tree].filter(
-				([p, sha]) => (p === CATALOG || p === CATALOG_TM || p.endsWith('.md')) && this.cache[p]?.sha !== sha
+				([p, sha]) => (p === CATALOG || p === CATALOG_TM || NOTE_PATH.test(p)) && this.cache[p]?.sha !== sha
 			);
 			for (let i = 0; i < wanted.length; i += 8) {
 				await Promise.all(

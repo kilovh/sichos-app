@@ -182,7 +182,8 @@
 		max-height: min(78vh, 720px);
 		display: flex;
 		flex-direction: column;
-		box-shadow: 0 18px 50px rgb(0 0 0 / 0.18);
+		border: 1px solid var(--ink);
+		background: var(--bg);
 		overflow: hidden;
 	}
 	.scopes,
@@ -208,7 +209,7 @@
 	}
 	.scopes button.on {
 		color: var(--ink);
-		border-bottom-color: var(--accent);
+		border-bottom-color: var(--red);
 	}
 	.q {
 		border: 0;
@@ -230,17 +231,18 @@
 	}
 	.groups button {
 		flex: none;
-		border: 1px solid var(--line);
+		border: 0;
 		background: none;
-		border-radius: 6px;
-		padding: 2px 7px;
-		font: 14px var(--he);
+		padding: 1px 5px;
+		font: 15px var(--he);
 		color: var(--muted);
 	}
+	.groups button:hover {
+		color: var(--ink);
+	}
 	.groups button.on {
-		background: var(--accent);
-		border-color: var(--accent);
 		color: var(--bg);
+		background: var(--ink);
 	}
 	.results {
 		overflow-y: auto;

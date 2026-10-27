@@ -63,7 +63,6 @@
 		padding: 14px 16px;
 		font-size: 20px;
 		border: 1px solid var(--line);
-		border-radius: var(--radius);
 		background: var(--surface);
 		font-family: var(--serif), var(--he);
 	}
@@ -77,17 +76,22 @@
 		margin: 10px 0 18px;
 	}
 	.filters button {
-		border: 1px solid var(--line);
+		border: 0;
 		background: none;
-		border-radius: 999px;
-		padding: 3px 12px;
-		text-transform: capitalize;
+		padding: 2px 0;
+		margin-inline-end: 14px;
+		font-size: 12px;
+		font-weight: 600;
+		letter-spacing: 0.12em;
+		text-transform: uppercase;
 		color: var(--muted);
 	}
 	.filters button.on {
-		background: var(--accent-soft);
-		border-color: var(--accent);
 		color: var(--ink);
+		text-decoration: underline;
+		text-decoration-color: var(--red);
+		text-decoration-thickness: 2px;
+		text-underline-offset: 6px;
 	}
 	.count {
 		margin: 0 0 4px;

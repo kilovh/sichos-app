@@ -18,7 +18,7 @@
 		<div class="line">
 			<span class="title">{sicha.title}</span>
 			{#if note?.status && note.status !== 'learned'}
-				<span class="chip" dir="ltr">{note.status === 'revisit' ? 'revisit' : 'in progress'}</span>
+				<span class="state ui" dir="ltr">{note.status === 'revisit' ? 'revisit' : 'in progress'}</span>
 			{/if}
 			{#if hasNote}<span class="noted" title="Has notes">✎</span>{/if}
 			<span class="cite">{showVolume ? citation(sicha) : sicha.page ? `ע' ${sicha.page}` : ''}</span>
@@ -61,8 +61,13 @@
 		color: var(--faint);
 		font-size: 14px;
 	}
+	.state {
+		font-size: 13px;
+		font-style: italic;
+		color: var(--red);
+	}
 	.noted {
-		color: var(--accent);
+		color: var(--muted);
 		font-size: 13px;
 	}
 	.summary {

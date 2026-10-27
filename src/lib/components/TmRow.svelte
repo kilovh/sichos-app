@@ -42,7 +42,7 @@
 		font-size: 17.5px;
 	}
 	.noted {
-		color: var(--accent);
+		color: var(--muted);
 		font-size: 13px;
 	}
 	.row :global(.star) {

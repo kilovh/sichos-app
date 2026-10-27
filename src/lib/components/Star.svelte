@@ -46,10 +46,10 @@
 		stroke-linejoin: round;
 	}
 	.star:hover {
-		color: var(--warn);
+		color: var(--gold);
 	}
 	.on {
-		color: var(--warn);
+		color: var(--gold);
 	}
 	.on svg {
 		fill: currentColor;

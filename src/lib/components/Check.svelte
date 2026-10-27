@@ -1,5 +1,5 @@
 <script lang="ts">
-	let { checked, onclick, label, size = 22 }: { checked: boolean; onclick: () => void; label: string; size?: number } =
+	let { checked, onclick, label, size = 17 }: { checked: boolean; onclick: () => void; label: string; size?: number } =
 		$props();
 </script>
 
@@ -21,43 +21,41 @@
 </button>
 
 <style>
+	/* A square: hairline when open, solid ink when done. */
 	.check {
+		position: relative;
 		flex: none;
 		width: var(--size);
 		height: var(--size);
 		padding: 0;
 		display: grid;
 		place-items: center;
-		border-radius: 50%;
-		border: 1.5px solid var(--faint);
+		border: 1px solid var(--muted);
 		background: transparent;
 		transition:
-			background 0.15s,
-			border-color 0.15s;
+			background 0.12s,
+			border-color 0.12s;
 	}
 	.check:hover {
-		border-color: var(--done);
+		border-color: var(--ink);
 	}
 	svg {
-		width: 62%;
+		width: 70%;
 		fill: none;
 		stroke: var(--bg);
 		stroke-width: 2.2;
-		stroke-linecap: round;
-		stroke-linejoin: round;
+		stroke-linecap: square;
+		stroke-linejoin: miter;
 		opacity: 0;
 	}
 	.checked {
-		background: var(--done);
-		border-color: var(--done);
+		background: var(--ink);
+		border-color: var(--ink);
 	}
 	.checked svg {
 		opacity: 1;
 	}
-	/* Bigger hit area than the visible circle, for thumbs. */
-	.check {
-		position: relative;
-	}
+	/* Bigger hit area than the visible square, for thumbs. */
 	.check::after {
 		content: '';
 		position: absolute;

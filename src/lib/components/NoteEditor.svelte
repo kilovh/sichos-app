@@ -140,7 +140,6 @@
 		min-height: 140px;
 		padding: 14px 16px;
 		border: 1px solid var(--line);
-		border-radius: var(--radius);
 		background: var(--surface);
 		font: 17px/1.65 var(--serif), var(--he);
 		resize: none;
@@ -174,8 +173,15 @@
 		margin: 0 0 0.8em;
 	}
 	.prose :global(a) {
-		color: var(--accent);
-		border-bottom: 1px solid color-mix(in srgb, var(--accent) 35%, transparent);
+		color: inherit;
+		text-decoration: underline;
+		text-decoration-color: var(--faint);
+		text-decoration-thickness: 1px;
+		text-underline-offset: 0.18em;
+	}
+	.prose :global(a:hover) {
+		color: var(--red);
+		text-decoration-color: var(--red);
 	}
 	.prose :global(blockquote) {
 		margin: 0 0 0.8em;

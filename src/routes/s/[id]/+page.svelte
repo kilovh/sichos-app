@@ -112,7 +112,7 @@
 		</div>
 
 		{#if sicha.summary}
-			<section class="summary card">
+			<section class="summary">
 				<p class="eyebrow">Summary · Mafteiach</p>
 				<p class="he bidi">{sicha.summary}</p>
 			</section>
@@ -231,18 +231,16 @@
 		font-size: 17px;
 	}
 	.copy {
-		margin-inline-start: 8px;
-		border: 1px dashed var(--line);
+		margin-inline-start: 10px;
+		border: 0;
 		background: none;
-		border-radius: 6px;
-		padding: 1px 7px;
-		font-size: 12px;
-		color: var(--muted);
-		vertical-align: middle;
+		padding: 0;
+		font-size: 13px;
+		font-style: italic;
+		color: var(--faint);
 	}
 	.copy:hover {
-		color: var(--accent);
-		border-color: var(--accent);
+		color: var(--red);
 	}
 	.status {
 		display: flex;
@@ -255,8 +253,8 @@
 		flex: 1;
 	}
 	.btn.on {
-		background: var(--accent-soft);
-		border-color: var(--accent);
+		background: var(--ink);
+		color: var(--bg);
 	}
 	.link {
 		background: none;
@@ -282,13 +280,13 @@
 	.summary .eyebrow {
 		margin: 0 0 8px;
 	}
-	.summary {
-		padding: 14px 18px;
-	}
+	/* Mafteiach's summary, set off like a quotation: a rule on the reading side. */
 	.summary p.he {
 		margin: 0;
-		font-size: 17.5px;
-		line-height: 1.7;
+		padding-inline-start: 16px;
+		border-inline-start: 2px solid var(--ink);
+		font-size: 19px;
+		line-height: 1.65;
 	}
 	.section-head {
 		display: flex;
@@ -315,9 +313,7 @@
 		gap: 8px;
 		padding: 6px 10px;
 		border: 1px solid var(--line);
-		border-radius: 8px;
-		background: var(--surface);
-		font-size: 17px;
+		font-size: 18px;
 	}
 	.remove {
 		border: 0;
@@ -334,27 +330,17 @@
 		margin-top: 8px;
 	}
 	input {
-		border: 1px solid var(--line);
-		border-radius: 8px;
-		background: var(--surface);
-		padding: 6px 10px;
-		font-size: 14px;
-	}
-	input:focus {
-		outline: none;
-		border-color: var(--accent);
+		font-size: 16px;
 	}
 	.tags {
 		display: flex;
 		flex-wrap: wrap;
-		align-items: center;
-		gap: 6px;
+		align-items: baseline;
+		gap: 6px 18px;
 	}
 	.tags input {
-		border-style: dashed;
-		padding: 2px 10px;
-		border-radius: 999px;
-		font-size: 12.5px;
+		width: 9em;
+		font-size: 15px;
 	}
 	.small {
 		font-size: 12.5px;

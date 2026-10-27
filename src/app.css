@@ -1,57 +1,85 @@
+/*
+ * Type does the work: two faces (Source Serif 4 for Latin, Frank Ruhl Libre for Hebrew), black on paper,
+ * hairline rules instead of boxes, square corners, and one accent — an oxblood red — used sparingly.
+ * Gold is reserved for favorites.
+ */
 :root {
-	--bg: #f6f2ea;
-	--surface: #fffdf9;
-	--ink: #1f1c17;
-	--muted: #6e685d;
-	--faint: #a39c8f;
-	--line: #e5dfd2;
-	--accent: #2c4676;
-	--accent-soft: #e6ebf4;
-	--done: #2c4676;
-	--warn: #9a5b13;
+	--bg: #fcfbf8;
+	--ink: #151311;
+	--muted: #5f5951;
+	--faint: #9d968b;
+	--line: #dcd6cb;
+	--soft: #f2eee6;
+	--red: #8c1c1c;
+	--gold: #a27a16;
 
-	--he: 'Frank Ruhl Libre', 'David', 'Times New Roman', serif;
-	--serif: 'Newsreader', 'Iowan Old Style', Georgia, serif;
-	--sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
-	--radius: 10px;
+	/* Older names still used by components. */
+	--surface: var(--bg);
+	--accent: var(--red);
+	--accent-soft: var(--soft);
+	--done: var(--red);
+	--warn: var(--red);
+
+	--serif: 'Source Serif 4', 'Iowan Old Style', 'Palatino Linotype', Georgia, serif;
+	--he: 'Frank Ruhl Libre', 'Taamey Frank CLM', 'David', serif;
+	--sans: var(--serif);
 	--gutter: 16px;
+	--measure: 720px;
 	color-scheme: light;
 }
 
 @media (prefers-color-scheme: dark) {
 	:root:not([data-theme='light']) {
-		--bg: #16171b;
-		--surface: #1e2025;
-		--ink: #ebe6dc;
-		--muted: #a19b90;
-		--faint: #6c685f;
-		--line: #2d3037;
-		--accent: #a9bde6;
-		--accent-soft: #263045;
-		--done: #a9bde6;
-		--warn: #e0a560;
+		--bg: #100f0e;
+		--ink: #ece7de;
+		--muted: #a59f95;
+		--faint: #6f6a61;
+		--line: #2f2c28;
+		--soft: #1b1917;
+		--red: #d2574a;
+		--gold: #d9ae4e;
 		color-scheme: dark;
 	}
+}
+:root[data-theme='dark'] {
+	--bg: #100f0e;
+	--ink: #ece7de;
+	--muted: #a59f95;
+	--faint: #6f6a61;
+	--line: #2f2c28;
+	--soft: #1b1917;
+	--red: #d2574a;
+	--gold: #d9ae4e;
+	color-scheme: dark;
 }
 
 *,
 *::before,
 *::after {
 	box-sizing: border-box;
+	border-radius: 0;
 }
 
 html {
 	-webkit-text-size-adjust: 100%;
+	text-rendering: optimizeLegibility;
 }
 
 body {
 	margin: 0;
 	background: var(--bg);
 	color: var(--ink);
-	font: 17px/1.55 var(--serif);
 	/* Hebrew falls through to Frank Ruhl Libre automatically via the stack. */
-	font-family: var(--serif), var(--he);
+	font: 19px/1.5 var(--serif), var(--he);
+	font-optical-sizing: auto;
+	font-variant-numeric: oldstyle-nums proportional-nums;
+	font-kerning: normal;
+	hanging-punctuation: first;
 	-webkit-font-smoothing: antialiased;
+}
+
+::selection {
+	background: color-mix(in srgb, var(--red) 22%, transparent);
 }
 
 a {
@@ -72,9 +100,8 @@ button {
 }
 
 :focus-visible {
-	outline: 2px solid var(--accent);
-	outline-offset: 2px;
-	border-radius: 4px;
+	outline: 1px solid var(--ink);
+	outline-offset: 3px;
 }
 
 /* Hebrew runs */
@@ -90,90 +117,143 @@ button {
 	text-align: start;
 }
 
+/* Interface text: the same serif, smaller, with figures that line up. */
 .ui {
-	font-family: var(--sans);
-	font-size: 14px;
+	font-family: var(--serif);
+	font-size: 15px;
+	font-variant-numeric: lining-nums tabular-nums;
 }
 
 .muted {
 	color: var(--muted);
 }
 
+/* Section labels: letter-spaced capitals behind a small red square. */
 .eyebrow {
-	font: 600 11px/1.2 var(--sans);
-	letter-spacing: 0.08em;
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	font: 600 11.5px/1.2 var(--serif);
+	letter-spacing: 0.14em;
 	text-transform: uppercase;
 	color: var(--muted);
 }
+/* Hebrew has no capitals to space out; keep the square, drop the tracking. */
+.he .eyebrow,
+.eyebrow.he {
+	font: 500 14px/1.2 var(--he);
+	letter-spacing: 0.01em;
+}
+.eyebrow::before {
+	content: '';
+	flex: none;
+	width: 5px;
+	height: 5px;
+	background: var(--red);
+}
 
 .page {
-	max-width: 760px;
+	max-width: var(--measure);
 	margin: 0 auto;
-	padding: 28px var(--gutter) 120px;
+	padding: 36px var(--gutter) 120px;
 }
 
 .card {
-	background: var(--surface);
 	border: 1px solid var(--line);
-	border-radius: var(--radius);
+	background: none;
 }
 
+/* Square, outlined; inverts on hover. */
 .btn {
 	display: inline-flex;
 	align-items: center;
 	gap: 6px;
-	padding: 7px 12px;
-	border: 1px solid var(--line);
-	border-radius: 8px;
-	background: var(--surface);
-	font: 500 14px/1.2 var(--sans);
+	padding: 5px 12px 6px;
+	border: 1px solid var(--ink);
+	background: none;
+	font: 15px/1.2 var(--serif);
+	font-variant-numeric: lining-nums;
+	letter-spacing: 0.01em;
+	transition:
+		background 0.12s,
+		color 0.12s;
 }
-
-.btn:hover {
-	border-color: var(--faint);
-}
-
-.btn.primary {
-	background: var(--accent);
-	border-color: var(--accent);
+.btn:hover:not(:disabled) {
+	background: var(--ink);
 	color: var(--bg);
 }
+.btn.primary {
+	background: var(--ink);
+	color: var(--bg);
+}
+.btn.primary:hover:not(:disabled) {
+	background: var(--red);
+	border-color: var(--red);
+}
+.btn:disabled {
+	opacity: 0.4;
+	cursor: default;
+}
 
+/* A hairline track with a thin red fill. */
 .bar {
-	height: 4px;
-	border-radius: 2px;
+	height: 2px;
 	background: var(--line);
 	overflow: hidden;
 }
-
 .bar > span {
 	display: block;
 	height: 100%;
-	background: var(--done);
-	border-radius: 2px;
+	background: var(--red);
 	transition: width 0.3s ease;
 }
 
+/* Tags: plain words, not pills. */
 .chip {
 	display: inline-flex;
-	align-items: center;
+	align-items: baseline;
 	gap: 4px;
-	padding: 2px 9px;
-	border-radius: 999px;
-	background: var(--accent-soft);
-	font: 500 12.5px/1.6 var(--sans);
+	padding: 0;
+	background: none;
+	font: 16px/1.4 var(--serif), var(--he);
+}
+.chip.auto {
+	color: var(--muted);
+	font-style: italic;
 }
 
-.chip.auto {
-	background: transparent;
-	border: 1px dashed var(--line);
-	color: var(--muted);
+input:not([type='checkbox']),
+select {
+	border: 0;
+	border-bottom: 1px solid var(--line);
+	background: none;
+	padding: 4px 2px;
+}
+input:not([type='checkbox']):focus,
+select:focus {
+	outline: none;
+	border-bottom-color: var(--ink);
+}
+input[type='checkbox'] {
+	accent-color: var(--ink);
 }
 
 h1,
 h2,
 h3 {
 	font-weight: 500;
-	line-height: 1.2;
+	line-height: 1.15;
 	margin: 0;
+	letter-spacing: -0.005em;
+}
+
+hr {
+	border: 0;
+	margin: 36px 0;
+	text-align: center;
+	color: var(--faint);
+}
+hr::after {
+	content: '⁂';
+	font-size: 15px;
 }

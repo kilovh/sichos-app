@@ -120,7 +120,6 @@
 	input,
 	select {
 		border: 1px solid var(--line);
-		border-radius: 8px;
 		background: var(--surface);
 		padding: 7px 10px;
 		font-size: 15px;

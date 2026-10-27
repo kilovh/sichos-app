@@ -100,7 +100,6 @@
 	}
 	input {
 		border: 1px solid var(--line);
-		border-radius: 8px;
 		background: var(--bg);
 		padding: 8px 10px;
 		color: var(--ink);

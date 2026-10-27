@@ -105,16 +105,14 @@
 	.other {
 		display: flex;
 		flex-wrap: wrap;
-		gap: 8px;
+		gap: 4px 22px;
+		border-top: 1px solid var(--line);
+		padding-top: 12px;
 	}
 	.other a {
 		display: inline-flex;
 		gap: 6px;
 		align-items: baseline;
-		padding: 4px 12px;
-		border: 1px solid var(--line);
-		border-radius: 999px;
-		background: var(--surface);
-		font-size: 16px;
+		font-size: 18px;
 	}
 </style>

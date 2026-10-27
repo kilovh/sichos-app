@@ -12,6 +12,23 @@
 
 	onMount(() => store.init());
 
+	// Light / dark follows the system unless chosen here; the choice is remembered on this device.
+	type Theme = 'auto' | 'light' | 'dark';
+	let theme = $state<Theme>('auto');
+	onMount(() => {
+		try {
+			theme = (localStorage.getItem('sichos.theme') as Theme) ?? 'auto';
+		} catch {}
+	});
+	$effect(() => {
+		if (theme === 'auto') document.documentElement.removeAttribute('data-theme');
+		else document.documentElement.dataset.theme = theme;
+		try {
+			localStorage.setItem('sichos.theme', theme);
+		} catch {}
+	});
+	const nextTheme: Record<Theme, Theme> = { auto: 'dark', dark: 'light', light: 'auto' };
+
 	const nav = [
 		{ href: resolve('/'), label: 'Home', match: (p: string) => p === '/' },
 		{ href: resolve('/browse'), label: 'Browse', match: (p: string) => /^\/(browse|vol|parsha|group|tm|t\/)/.test(p) },
@@ -34,7 +51,17 @@
 			<a href={item.href} class:active={item.match(path)}>{item.label}</a>
 		{/each}
 	</nav>
-	<SyncBadge />
+	<div class="tools">
+		<SyncBadge />
+		<button
+			class="theme"
+			onclick={() => (theme = nextTheme[theme])}
+			title="Theme: {theme}"
+			aria-label="Switch theme (now {theme})"
+		>
+			{theme === 'auto' ? '◐' : theme === 'dark' ? '●' : '○'}
+		</button>
+	</div>
 </header>
 
 {#if store.ready && store.syncState === 'unconfigured' && !path.startsWith('/settings')}
@@ -66,29 +93,54 @@
 		top: 0;
 		z-index: 10;
 		display: flex;
-		align-items: center;
-		gap: 24px;
-		padding: calc(10px + env(safe-area-inset-top)) var(--gutter) 10px;
-		background: color-mix(in srgb, var(--bg) 88%, transparent);
-		backdrop-filter: blur(10px);
-		border-bottom: 1px solid var(--line);
+		align-items: baseline;
+		gap: 28px;
+		padding: calc(12px + env(safe-area-inset-top)) var(--gutter) 11px;
+		background: var(--bg);
+		border-bottom: 1px solid var(--ink);
 	}
 	.brand {
-		font-size: 20px;
+		font-size: 23px;
 		font-weight: 500;
+		line-height: 1;
 		margin-inline-end: auto;
 	}
 	nav a {
 		color: var(--muted);
-		padding: 4px 2px;
+		font-size: 12px;
+		font-weight: 600;
+		letter-spacing: 0.14em;
+		text-transform: uppercase;
+	}
+	nav a:hover {
+		color: var(--ink);
 	}
 	nav a.active {
 		color: var(--ink);
-		box-shadow: inset 0 -2px var(--accent);
+		text-decoration: underline;
+		text-decoration-color: var(--red);
+		text-decoration-thickness: 2px;
+		text-underline-offset: 7px;
 	}
 	.desktop {
 		display: flex;
-		gap: 20px;
+		gap: 22px;
+	}
+	.tools {
+		display: flex;
+		align-items: baseline;
+		gap: 14px;
+	}
+	.theme {
+		border: 0;
+		background: none;
+		padding: 0 2px;
+		color: var(--muted);
+		font-size: 14px;
+		line-height: 1;
+	}
+	.theme:hover {
+		color: var(--ink);
 	}
 	.mobile {
 		display: none;
@@ -103,19 +155,16 @@
 			z-index: 10;
 			display: grid;
 			grid-template-columns: repeat(4, 1fr);
-			padding: 6px 0 calc(6px + env(safe-area-inset-bottom));
-			background: color-mix(in srgb, var(--surface) 92%, transparent);
-			backdrop-filter: blur(10px);
-			border-top: 1px solid var(--line);
+			padding: 2px 0 env(safe-area-inset-bottom);
+			background: var(--bg);
+			border-top: 1px solid var(--ink);
 		}
 		.mobile a {
 			text-align: center;
-			padding: 10px 0;
-			font-weight: 500;
+			padding: 14px 0;
 		}
 		.mobile a.active {
-			box-shadow: none;
-			color: var(--accent);
+			text-underline-offset: 6px;
 		}
 	}
 	.connect {
